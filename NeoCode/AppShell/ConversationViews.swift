@@ -107,8 +107,12 @@ struct ConversationView: View {
                     SessionHeaderView(session: session)
                         .zIndex(50)
 
-                    GeometryReader { _ in
-                        transcriptScrollView(using: proxy)
+                    GeometryReader { geometry in
+                        let columnWidth = max(geometry.size.width - 32, 480)
+                        ZStack(alignment: .bottom) {
+                            transcriptScrollView(using: proxy, columnWidth: columnWidth)
+                            composerOverlay(using: proxy, columnWidth: columnWidth)
+                        }
                     }
                 }
             }
@@ -432,10 +436,11 @@ struct ConversationView: View {
         }
     }
 
-    private func transcriptScrollView(using proxy: ScrollViewProxy) -> some View {
-        // The composer is drawn as an overlay pinned to the bottom of this ZStack.
-        // That preserves the scroll view's full-height scrollbar track while the
-        // transcript itself reserves room with `contentBottomInset`.
+    private func transcriptScrollView(using proxy: ScrollViewProxy, columnWidth: CGFloat) -> some View {
+        // The composer overlay is drawn by ConversationView's GeometryReader
+        // (pinned to the bottom of the parent ZStack) so this scroll view gets
+        // a full-height scrollbar track. The transcript reserves room below
+        // its last message via `contentBottomInset`.
         ZStack(alignment: .bottom) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
@@ -466,7 +471,7 @@ struct ConversationView: View {
                 .padding(.horizontal, transcriptHorizontalInset)
                 .padding(.top, 24)
                 .padding(.bottom, 0)
-                .frame(maxWidth: transcriptColumnWidth, alignment: .leading)
+                .frame(maxWidth: columnWidth, alignment: .leading)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .background {
                     // Attach inside the scroll content hierarchy so AppKit scroll
@@ -493,7 +498,6 @@ struct ConversationView: View {
                     .allowsHitTesting(false)
             }
 
-            composerOverlay(using: proxy)
         }
     }
 
@@ -524,9 +528,9 @@ struct ConversationView: View {
         }
     }
 
-    private func composerOverlay(using proxy: ScrollViewProxy) -> some View {
+    private func composerOverlay(using proxy: ScrollViewProxy, columnWidth: CGFloat) -> some View {
         HStack(alignment: .bottom, spacing: 0) {
-            composerDock(using: proxy)
+            composerDock(using: proxy, columnWidth: columnWidth)
                 .overlay(alignment: .top) {
                     if !isPinnedToBottom {
                         backToBottomButton(using: proxy)
@@ -542,7 +546,7 @@ struct ConversationView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func composerDock(using proxy: ScrollViewProxy) -> some View {
+    private func composerDock(using proxy: ScrollViewProxy, columnWidth: CGFloat) -> some View {
         VStack(alignment: .center, spacing: composerControlSpacing) {
             if let activeAuxiliaryTrigger {
                 Group {
@@ -565,7 +569,7 @@ struct ConversationView: View {
                         )
                     }
                 }
-                .frame(width: transcriptColumnWidth)
+                .frame(width: columnWidth)
                 .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .bottom)))
                 .zIndex(2)
             }
@@ -583,20 +587,21 @@ struct ConversationView: View {
                         }
                     }
                 )
-                .frame(width: transcriptColumnWidth)
+                .frame(width: columnWidth)
                 .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .bottom)))
                 .zIndex(1)
             }
 
             if isTodoListPresented, !store.todos(for: sessionID).isEmpty {
                 ComposerTodoPanel(items: store.todos(for: sessionID))
-                    .frame(width: transcriptColumnWidth)
+                    .frame(width: columnWidth)
                     .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .bottom)))
                     .zIndex(1)
             }
 
             SessionPromptAreaView(
                 surface: promptSurface,
+                columnWidth: columnWidth,
                 draftText: draftBinding,
                 selectionRequest: $composerSelectionRequest,
                 isTodoListPresented: $isTodoListPresented,
@@ -620,7 +625,7 @@ struct ConversationView: View {
             )
         }
         .padding(.horizontal, transcriptHorizontalInset)
-        .frame(maxWidth: transcriptColumnWidth)
+        .frame(maxWidth: columnWidth)
         .padding(.top, composerTopPadding)
         .padding(.bottom, composerBottomPadding)
         .background(

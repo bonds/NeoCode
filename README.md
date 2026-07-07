@@ -11,6 +11,16 @@
 
 NeoCode provides a beautiful, native macOS interface for OpenCode, launching per-project runtimes and connecting over HTTP/SSE to deliver AI-powered coding assistance with real-time streaming responses, tool execution, and seamless Git integration.
 
+## Fork-specific changes
+
+This is the [bonds/NeoCode](https://github.com/bonds/NeoCode) fork. Changes relative to upstream:
+
+- **Smaller default window** — 1100×700 (min 960×640) vs upstream's larger default, for 13" MacBook screens.
+- **Automatic opencode CLI discovery under Nix** — `enhancedPATH` adds `/run/current-system/sw/bin` and `~/.nix-profile/bin` before launching the OpenCode runtime, so `opencode` is found without manual PATH configuration.
+- **Sparkle auto-updater stripped in the Nix build** — `SUFeedURL` and `SUEnableAutomaticUpdates` are removed from `Info.plist`. Updates go through `nr --update` (nix flake input bump), not the in-app auto-updater.
+- **Responsive conversation column** — the transcript and composer scale to the available window width instead of a fixed 820pt column, using a `GeometryReader`-based `columnWidth = max(availableWidth − 32, 480)`.
+- **Nix flake packaging** — `flake.nix` exposes `packages.aarch64-darwin.default` consuming the prebuilt DMG from the GitHub release.
+
 ## Table of Contents
 
 - [Background](#background)

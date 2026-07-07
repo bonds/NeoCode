@@ -1,4 +1,6 @@
 DerivedData/
+build/
+NeoCode.dmg
 dist/
 updates/
 bin/

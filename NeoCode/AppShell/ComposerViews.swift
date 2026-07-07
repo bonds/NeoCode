@@ -19,7 +19,7 @@ struct ComposerView: View {
     let onSend: () -> Void
     let onStop: () -> Void
 
-    private let contentWidth: CGFloat = 820
+    let columnWidth: CGFloat
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -111,7 +111,7 @@ struct ComposerView: View {
             }
             .animation(.spring(response: 0.32, dampingFraction: 0.82), value: activityState)
         }
-        .frame(width: contentWidth, alignment: .leading)
+        .frame(maxWidth: columnWidth, alignment: .leading)
         .fileImporter(
             isPresented: $isImportingFiles,
             allowedContentTypes: [.item],

@@ -30,6 +30,7 @@ enum SessionPromptSurface: Equatable {
 
 struct SessionPromptAreaView: View {
     let surface: SessionPromptSurface
+    let columnWidth: CGFloat
     @Binding var draftText: String
     @Binding var selectionRequest: ComposerTextSelectionRequest?
     @Binding var isTodoListPresented: Bool
@@ -53,7 +54,8 @@ struct SessionPromptAreaView: View {
                     onMoveAuxiliarySelection: onMoveAuxiliarySelection,
                     onCancelAuxiliaryUI: onCancelAuxiliaryUI,
                     onSend: onSend,
-                    onStop: onStop
+                    onStop: onStop,
+                    columnWidth: columnWidth
                 )
                     .textInputHeight($textInputHeight)
                     .focused($composerFocused)
