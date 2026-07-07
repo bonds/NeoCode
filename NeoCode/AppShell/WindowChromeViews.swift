@@ -13,8 +13,16 @@ private final class DragRegionView: NSView {
     override var mouseDownCanMoveWindow: Bool { true }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
-        guard bounds.contains(point) else { return nil }
-        return self
+        if let view = super.hitTest(point) { return view }
+        return bounds.contains(point) ? self : nil
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        if event.clickCount >= 2 {
+            window?.zoom(nil)
+            return
+        }
+        super.mouseUp(with: event)
     }
 }
 

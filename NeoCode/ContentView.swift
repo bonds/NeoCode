@@ -14,13 +14,29 @@ struct ContentView: View {
     @Environment(AppUpdateService.self) private var updateService
     @Environment(\.scenePhase) private var scenePhase
     @State private var toastMessage: String?
+    @State private var sidebarWidth: CGFloat = 318
+    @State private var sidebarResizeHovering = false
 
     private let uiTestModeKey = "NEOCODE_UI_TEST_MODE"
 
     var body: some View {
         HStack(spacing: 0) {
             AppSidebarView()
-                .frame(width: 318)
+                .frame(width: sidebarWidth, alignment: .leading)
+
+            Rectangle()
+                .fill(sidebarResizeHovering ? NeoCodeTheme.line : .clear)
+                .contentShape(Rectangle())
+                .frame(width: 4)
+                .onHover { hovering in
+                    sidebarResizeHovering = hovering
+                }
+                .gesture(
+                    DragGesture(minimumDistance: 1)
+                        .onChanged { value in
+                            sidebarWidth = max(260, min(480, sidebarWidth + value.translation.width))
+                        }
+                )
 
             PrimaryContentScreen()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

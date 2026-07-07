@@ -47,13 +47,11 @@ struct WorkspaceToolService {
     }
 
     func icon(for tool: WorkspaceTool) -> NSImage? {
-        guard let applicationURL = tool.applicationURL,
-              let iconURL = applicationIconURL(for: applicationURL),
-              let image = NSImage(contentsOf: iconURL)
-        else {
+        guard let applicationURL = tool.applicationURL else {
             return nil
         }
 
+        let image = NSWorkspace.shared.icon(forFile: applicationURL.path)
         image.size = NSSize(width: 32, height: 32)
         image.isTemplate = false
         return image
@@ -173,7 +171,7 @@ struct WorkspaceToolService {
     }
 
     private func queryApplicationsOpeningFolders() -> Set<URL> {
-        Set(NSWorkspace.shared.urlsForApplications(toOpen: fileManager.homeDirectoryForCurrentUser))
+        Set(NSWorkspace.shared.urlsForApplications(toOpen: URL(fileURLWithPath: "/tmp")))
     }
 
     private func installedApplication(for url: URL, queryResults: QueryResults) -> InstalledApplication? {
@@ -225,65 +223,6 @@ struct WorkspaceToolService {
 
     private func appSort(_ lhs: InstalledApplication, _ rhs: InstalledApplication) -> Bool {
         lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName) == .orderedAscending
-    }
-
-    private func applicationIconURL(for applicationURL: URL) -> URL? {
-        guard let bundle = Bundle(url: applicationURL) else { return nil }
-
-        let resourcesURL = applicationURL.appendingPathComponent("Contents/Resources", isDirectory: true)
-
-        if let iconName = bundle.object(forInfoDictionaryKey: "CFBundleIconFile") as? String,
-           let iconURL = iconURL(named: iconName, in: resourcesURL) {
-            return iconURL
-        }
-
-        if let iconName = bundle.object(forInfoDictionaryKey: "CFBundleIconName") as? String,
-           let iconURL = iconURL(named: iconName, in: resourcesURL) {
-            return iconURL
-        }
-
-        return firstIconURL(in: resourcesURL)
-    }
-
-    private func iconURL(named iconName: String, in resourcesURL: URL) -> URL? {
-        let normalizedName = (iconName as NSString).deletingPathExtension
-        let exactURL = resourcesURL.appendingPathComponent(iconName)
-        if fileManager.fileExists(atPath: exactURL.path) {
-            return exactURL
-        }
-
-        let icnsURL = resourcesURL.appendingPathComponent(normalizedName).appendingPathExtension("icns")
-        if fileManager.fileExists(atPath: icnsURL.path) {
-            return icnsURL
-        }
-
-        let pngURL = resourcesURL.appendingPathComponent(normalizedName).appendingPathExtension("png")
-        if fileManager.fileExists(atPath: pngURL.path) {
-            return pngURL
-        }
-
-        return nil
-    }
-
-    private func firstIconURL(in resourcesURL: URL) -> URL? {
-        guard let enumerator = fileManager.enumerator(
-            at: resourcesURL,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            return nil
-        }
-
-        for case let url as URL in enumerator {
-            switch url.pathExtension.lowercased() {
-            case "icns", "png":
-                return url
-            default:
-                continue
-            }
-        }
-
-        return nil
     }
 }
 

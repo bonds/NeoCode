@@ -542,6 +542,7 @@ struct ConversationView: View {
 
             Color.clear
                 .frame(width: scrollbarCompensation, height: 1)
+                .allowsHitTesting(false)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

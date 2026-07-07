@@ -37,6 +37,9 @@ struct SessionHeaderView: View {
                         isMenuOpen: openMenu == .workspaceTools,
                         onToggleMenu: {
                             openMenu = openMenu == .workspaceTools ? nil : .workspaceTools
+                            if openMenu == .workspaceTools, workspaceTools.isEmpty {
+                                workspaceTools = workspaceToolService.projectOpenTools()
+                            }
                         },
                         onDismissMenu: {
                             if openMenu == .workspaceTools {
@@ -97,7 +100,8 @@ struct SessionHeaderView: View {
         .padding(.vertical, 16)
         .background(WindowDragRegion())
         .task(id: projectPath) {
-            await refreshHeaderState()
+            guard !projectPath.isEmpty else { return }
+            await store.refreshGitCommitPreview(showLoadingIndicator: false, projectPathOverride: projectPath)
         }
         .sheet(isPresented: $isCommitSheetPresented) {
             GitCommitSheet(isPresented: $isCommitSheetPresented)
