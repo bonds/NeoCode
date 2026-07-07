@@ -624,6 +624,8 @@ final class OpenCodeRuntime {
     static func enhancedPATH(from existingPATH: String?) -> String {
         var entries = [
             NSHomeDirectory() + "/.bun/bin",
+            NSHomeDirectory() + "/.nix-profile/bin",
+            "/run/current-system/sw/bin",
             "/opt/homebrew/bin",
             "/usr/local/bin",
             "/usr/bin",

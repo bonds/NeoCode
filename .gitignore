@@ -1,5 +1,6 @@
 DerivedData/
 build/
+build*/
 NeoCode.dmg
 dist/
 updates/
