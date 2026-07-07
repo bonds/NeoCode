@@ -61,6 +61,9 @@ struct ContentView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
+        .task(id: selectionSyncTaskKey) {
+            await runSelectionSyncTask(for: selectionSyncTaskKey)
+        }
         .task(id: dashboardRefreshTaskKey) {
             await runDashboardRefreshTask(for: dashboardRefreshTaskKey)
         }
@@ -92,6 +95,28 @@ struct ContentView: View {
                     }
                 }
             }
+        }
+    }
+
+    private func runSelectionSyncTask(for taskKey: String) async {
+        let logger = Logger(subsystem: "tech.watzon.NeoCode", category: "ContentView")
+        let bootstrappingEnabled = isRuntimeBootstrappingEnabled
+        let skipsForSettings = store.isSettingsSelected
+
+        await withTaskCancellationHandler {
+            guard bootstrappingEnabled else { return }
+            guard !skipsForSettings else {
+                logger.debug("Skipping selection sync for settings key=\(taskKey, privacy: .public)")
+                return
+            }
+
+            logger.debug("Starting selection sync key=\(taskKey, privacy: .public)")
+            await store.syncSelection(using: runtime)
+            logger.debug("Finished selection sync key=\(taskKey, privacy: .public)")
+        } onCancel: {
+            logger.info(
+                "Selection sync task cancelled key=\(taskKey, privacy: .public) bootstrapping=\(bootstrappingEnabled, privacy: .public) settings=\(skipsForSettings, privacy: .public)"
+            )
         }
     }
 
@@ -141,6 +166,16 @@ struct ContentView: View {
         return "\(mode)-\(store.dashboardProjectSignature)"
             + ":\(scenePhaseTaskKey)"
             + ":\(store.lifecycleRefreshToken)"
+    }
+
+    private var selectionSyncTaskKey: String {
+        if let settingsSection = store.selectedSettingsSection {
+            return "settings:\(settingsSection.rawValue)"
+        }
+
+        let projectID = store.selectedProject?.id.uuidString ?? "none"
+        let sessionID = store.selectedSessionID ?? "dashboard"
+        return "\(projectID):\(sessionID):\(scenePhaseTaskKey):\(store.lifecycleRefreshToken)"
     }
 
     private var scenePhaseTaskKey: String {

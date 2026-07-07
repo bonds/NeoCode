@@ -112,6 +112,11 @@ struct ConversationView: View {
                         ZStack(alignment: .bottom) {
                             transcriptScrollView(using: proxy, columnWidth: columnWidth)
                             composerOverlay(using: proxy, columnWidth: columnWidth)
+                            if !isPinnedToBottom {
+                                backToBottomButton(using: proxy)
+                                    .offset(y: -(promptOverlayHeight + composerControlSpacing + 42))
+                                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                            }
                         }
                     }
                 }
@@ -531,14 +536,6 @@ struct ConversationView: View {
     private func composerOverlay(using proxy: ScrollViewProxy, columnWidth: CGFloat) -> some View {
         HStack(alignment: .bottom, spacing: 0) {
             composerDock(using: proxy, columnWidth: columnWidth)
-                .overlay(alignment: .top) {
-                    if !isPinnedToBottom {
-                        backToBottomButton(using: proxy)
-                            .offset(y: -(composerControlSpacing + 42))
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
-                            .zIndex(1)
-                    }
-                }
 
             Color.clear
                 .frame(width: scrollbarCompensation, height: 1)
