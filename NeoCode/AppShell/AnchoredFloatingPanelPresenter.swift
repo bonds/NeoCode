@@ -195,7 +195,12 @@ struct AnchoredFloatingPanelPresenter<Content: View>: NSViewRepresentable {
                 y: panelOriginY(for: direction, anchorFrameOnScreen: anchorFrameOnScreen, panelHeight: fittingSize.height)
             )
 
-            panel.setFrame(CGRect(origin: panelOrigin, size: fittingSize), display: true)
+            let fittedOrigin = clampPanelOrigin(
+                panelOrigin, panelSize: fittingSize,
+                direction: direction, anchorFrameOnScreen: anchorFrameOnScreen
+            )
+
+            panel.setFrame(CGRect(origin: fittedOrigin, size: fittingSize), display: true)
         }
 
         private func panelOriginX(
@@ -222,6 +227,36 @@ struct AnchoredFloatingPanelPresenter<Content: View>: NSViewRepresentable {
             case .down:
                 return anchorFrameOnScreen.minY - 6 - panelHeight
             }
+        }
+
+        private func clampPanelOrigin(
+            _ proposed: CGPoint, panelSize: CGSize,
+            direction: FloatingPanelDirection, anchorFrameOnScreen: CGRect
+        ) -> CGPoint {
+            guard let screen = NSScreen.main ?? NSScreen.screens.first(where: { $0.visibleFrame.contains(anchorFrameOnScreen.origin) }) else {
+                return proposed
+            }
+
+            let visibleFrame = screen.visibleFrame
+            var origin = proposed
+
+            let panelRect = CGRect(origin: origin, size: panelSize)
+            if visibleFrame.contains(panelRect) {
+                return origin
+            }
+
+            // Try flipping direction first
+            let flippedDirection: FloatingPanelDirection = (direction == .up) ? .down : .up
+            let flippedY = panelOriginY(for: flippedDirection, anchorFrameOnScreen: anchorFrameOnScreen, panelHeight: panelSize.height)
+            let flippedRect = CGRect(x: origin.x, y: flippedY, width: panelSize.width, height: panelSize.height)
+            if visibleFrame.contains(flippedRect) {
+                return CGPoint(x: origin.x, y: flippedY)
+            }
+
+            // Clamp to screen bounds
+            origin.x = max(visibleFrame.minX, min(origin.x, visibleFrame.maxX - panelSize.width))
+            origin.y = max(visibleFrame.minY, min(origin.y, visibleFrame.maxY - panelSize.height))
+            return origin
         }
     }
 }

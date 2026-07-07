@@ -635,6 +635,7 @@ struct ConversationView: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
+            .allowsHitTesting(false)
         )
         .frame(maxWidth: .infinity, alignment: .center)
         .readHeight {
