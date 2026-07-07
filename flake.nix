@@ -16,7 +16,7 @@
 
       src = pkgs.fetchurl {
         url = "https://github.com/bonds/NeoCode/releases/download/v${version}/NeoCode.dmg";
-        hash = "sha256-sTHG/ISf0W+dAifNu2E4DfLv0cEtyDxOIXySByMhttk=";
+        hash = "sha256-jaIqliG2/xw0uSVU8vNDoZM7xWZD1Zsjy4E789fobPY=";
       };
 
       sourceRoot = ".";
