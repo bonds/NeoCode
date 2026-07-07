@@ -30,6 +30,11 @@
         /usr/bin/plutil -remove SUFeedURL $out/Applications/NeoCode.app/Contents/Info.plist 2>/dev/null || true
         /usr/bin/plutil -remove SUEnableAutomaticUpdates $out/Applications/NeoCode.app/Contents/Info.plist 2>/dev/null || true
 
+        # Inject fork version (with date + git hash) so the About panel
+        # shows the same version string as the GitHub release.
+        /usr/bin/plutil -replace CFBundleShortVersionString -string "${version}" $out/Applications/NeoCode.app/Contents/Info.plist 2>/dev/null || true
+        /usr/bin/plutil -replace CFBundleVersion -string "${version}" $out/Applications/NeoCode.app/Contents/Info.plist 2>/dev/null || true
+
         find $out/Applications/NeoCode.app -name '*.HFS+' -delete 2>/dev/null || true
         find $out/Applications/NeoCode.app -name '*:com.apple.*' -delete 2>/dev/null || true
         find $out/Applications/NeoCode.app -name '.DS_Store' -delete 2>/dev/null || true

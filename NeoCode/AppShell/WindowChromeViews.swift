@@ -56,7 +56,7 @@ struct WindowChromeConfigurator: NSViewRepresentable {
             window.isOpaque = true
             window.backgroundColor = NeoCodeTheme.canvasColor
         }
-        window.minSize = NSSize(width: 980, height: 600)
+        window.minSize = NSSize(width: 960, height: 640)
         updateService.attach(to: window)
     }
 }
