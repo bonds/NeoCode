@@ -321,9 +321,15 @@ struct ToolCallRowView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(presentation.items) { item in
-                ToolCallItemCardView(item: item, toolStatus: toolCall.status, contentWidth: contentWidth)
+        if toolCall.isTaskTool,
+           let sessionID = toolCall.detail {
+            SubagentTaskCardView(sessionID: sessionID)
+                .padding(.horizontal, 14)
+        } else {
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(presentation.items) { item in
+                    ToolCallItemCardView(item: item, toolStatus: toolCall.status, contentWidth: contentWidth)
+                }
             }
         }
     }

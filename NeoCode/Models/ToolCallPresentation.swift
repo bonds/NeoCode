@@ -782,3 +782,9 @@ private enum ToolCallPresentationCache {
         return NSString(string: String(hasher.finalize()))
     }
 }
+
+extension ChatMessage.ToolCall {
+    var isTaskTool: Bool {
+        name.lowercased().split(whereSeparator: { $0 == "." || $0 == ":" || $0 == "/" }).last.map(String.init) == "task"
+    }
+}
