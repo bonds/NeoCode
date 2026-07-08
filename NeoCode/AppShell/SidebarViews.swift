@@ -428,7 +428,7 @@ struct SessionTreeRow: View {
                 if isChild {
                     TreeBranchConnector()
                         .stroke(NeoCodeTheme.textMuted, style: StrokeStyle(lineWidth: 0.8, lineCap: .round))
-                        .frame(width: 28)
+                        .frame(width: 20)
                 } else if hasChildren {
                     Button(action: { store.toggleSessionChildrenCollapsed(session.id) }) {
                         Image(systemName: store.isSessionChildrenCollapsed(session.id) ? "chevron.right" : "chevron.down")
@@ -438,10 +438,10 @@ struct SessionTreeRow: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .frame(width: 28)
+                    .frame(width: 20)
                 } else {
                     Color.clear
-                        .frame(width: 28)
+                        .frame(width: 20)
                 }
             }
 
