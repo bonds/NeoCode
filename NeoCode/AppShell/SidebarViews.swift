@@ -426,8 +426,8 @@ struct SessionTreeRow: View {
         HStack(spacing: 6) {
             if isChild {
                 TreeBranchConnector()
-                    .stroke(NeoCodeTheme.textMuted, style: StrokeStyle(lineWidth: 1, lineCap: .round))
-                    .frame(width: 20, height: 18)
+                    .stroke(NeoCodeTheme.textMuted, style: StrokeStyle(lineWidth: 0.8, lineCap: .round))
+                    .frame(width: 28, height: 18)
             }
 
             if hasChildren {
@@ -435,7 +435,8 @@ struct SessionTreeRow: View {
                     Image(systemName: store.isSessionChildrenCollapsed(session.id) ? "chevron.right" : "chevron.down")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(NeoCodeTheme.textMuted)
-                        .frame(width: 10, height: 10)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -802,8 +803,9 @@ private struct SidebarChrome: View {
 struct TreeBranchConnector: Shape {
     func path(in rect: CGRect) -> Path {
         Path { path in
-            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
-            path.addLine(to: CGPoint(x: rect.minX, y: rect.midY))
+            let stemX = rect.midX
+            path.move(to: CGPoint(x: stemX, y: rect.minY))
+            path.addLine(to: CGPoint(x: stemX, y: rect.midY))
             path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
         }
     }
