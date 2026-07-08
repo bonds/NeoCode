@@ -187,7 +187,7 @@ struct ThreadsSectionHeader: View {
 
     var body: some View {
         HStack {
-            Text(localized("Threads", locale: locale))
+            Text(localized("Topics", locale: locale))
                 .font(.neoMeta)
                 .foregroundStyle(NeoCodeTheme.textMuted)
 
