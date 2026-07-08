@@ -20,7 +20,7 @@ struct NeoCodeApp: App {
                 AppSceneView(appDelegate: appDelegate)
             }
         }
-        .defaultSize(width: 1100, height: 700)
+        .defaultSize(width: 1100, height: 640)
         .windowResizability(.contentMinSize)
         .windowStyle(.hiddenTitleBar)
     }

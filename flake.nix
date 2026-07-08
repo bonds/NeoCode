@@ -30,10 +30,13 @@
         /usr/bin/plutil -remove SUFeedURL $out/Applications/NeoCode.app/Contents/Info.plist 2>/dev/null || true
         /usr/bin/plutil -remove SUEnableAutomaticUpdates $out/Applications/NeoCode.app/Contents/Info.plist 2>/dev/null || true
 
-        # Inject fork version (with date + git hash) so the About panel
-        # shows the same version string as the GitHub release.
-        /usr/bin/plutil -replace CFBundleShortVersionString -string "${version}" $out/Applications/NeoCode.app/Contents/Info.plist 2>/dev/null || true
-        /usr/bin/plutil -replace CFBundleVersion -string "${version}" $out/Applications/NeoCode.app/Contents/Info.plist 2>/dev/null || true
+        # Inject fork version into About panel:
+        #   Version 0.8.1
+        #   (202607080111-b735a43)
+        MARKETING="${version%%-*}"
+        BUILD_IDENTIFIER="${version#*-}"
+        /usr/bin/plutil -replace CFBundleShortVersionString -string "$MARKETING" $out/Applications/NeoCode.app/Contents/Info.plist
+        /usr/bin/plutil -replace CFBundleVersion -string "$BUILD_IDENTIFIER" $out/Applications/NeoCode.app/Contents/Info.plist
 
         find $out/Applications/NeoCode.app -name '*.HFS+' -delete 2>/dev/null || true
         find $out/Applications/NeoCode.app -name '*:com.apple.*' -delete 2>/dev/null || true
