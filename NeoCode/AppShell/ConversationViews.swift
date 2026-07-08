@@ -112,11 +112,6 @@ struct ConversationView: View {
                         ZStack(alignment: .bottom) {
                             transcriptScrollView(using: proxy, columnWidth: columnWidth)
                             composerOverlay(using: proxy, columnWidth: columnWidth)
-                            if !isPinnedToBottom {
-                                backToBottomButton(using: proxy)
-                                    .offset(y: -(promptOverlayHeight + composerControlSpacing + 42))
-                                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                            }
                         }
                     }
                 }
@@ -540,6 +535,7 @@ struct ConversationView: View {
     private func composerDock(using proxy: ScrollViewProxy, columnWidth: CGFloat) -> some View {
         VStack(alignment: .center, spacing: composerControlSpacing) {
             if let activeAuxiliaryTrigger {
+            if let activeAuxiliaryTrigger {
                 Group {
                     switch activeAuxiliaryTrigger.kind {
                     case .slashCommand:
@@ -614,6 +610,13 @@ struct ConversationView: View {
                     }
                 }
             )
+        }
+        .overlay(alignment: .top) {
+            if !isPinnedToBottom {
+                backToBottomButton(using: proxy)
+                    .offset(y: -(composerControlSpacing + 42))
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
         .padding(.horizontal, transcriptHorizontalInset)
         .frame(maxWidth: columnWidth)
