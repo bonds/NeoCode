@@ -259,12 +259,12 @@ struct ProjectTreeNode: View {
                         let isRootSelected = store.selectedSessionID == root.id
                         let isAnyChildSelected = children.contains(where: { $0.id == store.selectedSessionID })
 
-                        SessionTreeRow(session: root, isSelected: isRootSelected || isAnyChildSelected)
+                        SessionTreeRow(session: root, isSelected: isRootSelected || isAnyChildSelected, hasChildren: !children.isEmpty)
                             .onTapGesture {
                                 store.selectSession(root.id)
                             }
 
-                        if !children.isEmpty {
+                        if !children.isEmpty, !store.isSessionChildrenCollapsed(root.id) {
                             ForEach(children) { child in
                                 SessionTreeRow(session: child, isSelected: store.selectedSessionID == child.id, isChild: true)
                                     .onTapGesture {
@@ -420,6 +420,7 @@ struct SessionTreeRow: View {
     let session: SessionSummary
     let isSelected: Bool
     var isChild: Bool = false
+    var hasChildren: Bool = false
 
     var body: some View {
         HStack(spacing: 6) {
@@ -427,6 +428,16 @@ struct SessionTreeRow: View {
                 TreeBranchConnector()
                     .stroke(NeoCodeTheme.textMuted, style: StrokeStyle(lineWidth: 1, lineCap: .round))
                     .frame(width: 20, height: 18)
+            }
+
+            if hasChildren {
+                Button(action: { store.toggleSessionChildrenCollapsed(session.id) }) {
+                    Image(systemName: store.isSessionChildrenCollapsed(session.id) ? "chevron.right" : "chevron.down")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(NeoCodeTheme.textMuted)
+                        .frame(width: 10, height: 10)
+                }
+                .buttonStyle(.plain)
             }
 
             Text(currentSession.title)

@@ -227,6 +227,7 @@ final class AppStore {
     private var isHydratingPrompt = false
     private var promptPersistTask: Task<Void, Never>?
     private var yoloSessionKeys: Set<String>
+    private var collapsedChildSessions: Set<String> = []
     private var favoriteModelIDs: Set<String> = []
     private var isApplyingSessionComposerState = false
     private var autoRespondedPermissionIDs: [String: Date] = [:]
@@ -891,6 +892,18 @@ final class AppStore {
 
     func isProjectCollapsed(_ projectID: ProjectSummary.ID) -> Bool {
         projects.first(where: { $0.id == projectID })?.settings.isCollapsedInSidebar ?? false
+    }
+
+    func toggleSessionChildrenCollapsed(_ sessionID: String) {
+        if collapsedChildSessions.contains(sessionID) {
+            collapsedChildSessions.remove(sessionID)
+        } else {
+            collapsedChildSessions.insert(sessionID)
+        }
+    }
+
+    func isSessionChildrenCollapsed(_ sessionID: String) -> Bool {
+        collapsedChildSessions.contains(sessionID)
     }
 
     func isSessionListSyncing(for projectID: ProjectSummary.ID) -> Bool {
