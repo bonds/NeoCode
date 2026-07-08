@@ -221,13 +221,6 @@ struct SubagentTaskCardView: View {
         if let match = toolCall.detail?.firstMatch(of: pattern) {
             return String(match.1)
         }
-        // Third try: look for sessions in the store with parentID == currentSessionID
-        if let currentID = store.selectedSessionID,
-           let project = store.projects.first(where: { $0.sessions.contains(where: { $0.id == currentID }) }) {
-            if let child = project.sessions.first(where: { $0.parentID == currentID }) {
-                return child.id
-            }
-        }
         return nil
     }
 

@@ -830,10 +830,7 @@ final class AppStore {
 
     @MainActor
     func syncChildSessions(for parentSessionID: String, using runtime: OpenCodeRuntime) async {
-        guard let projectID = projectID(for: parentSessionID),
-              let project = projects.first(where: { $0.id == projectID }),
-              !project.sessions.contains(where: { $0.parentID == parentSessionID })
-        else { return }
+        guard let projectID = projectID(for: parentSessionID) else { return }
 
         guard let service = await connectProject(projectID, using: runtime, includeComposerOptions: false) else { return }
         let remoteSessions = (try? await service.listSessions()) ?? []
