@@ -535,7 +535,6 @@ struct ConversationView: View {
     private func composerDock(using proxy: ScrollViewProxy, columnWidth: CGFloat) -> some View {
         VStack(alignment: .center, spacing: composerControlSpacing) {
             if let activeAuxiliaryTrigger {
-            if let activeAuxiliaryTrigger {
                 Group {
                     switch activeAuxiliaryTrigger.kind {
                     case .slashCommand:
