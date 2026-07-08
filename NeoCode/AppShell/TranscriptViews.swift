@@ -323,7 +323,6 @@ struct ToolCallRowView: View {
     var body: some View {
         if toolCall.isTaskTool {
             SubagentTaskCardView(toolCall: toolCall)
-                .padding(.horizontal, 14)
         } else {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(presentation.items) { item in

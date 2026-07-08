@@ -219,6 +219,7 @@ final class AppStore {
     private var messageRoles: [String: ChatMessage.Role] = [:]
     private var messageInfosBySessionID: [String: [String: OpenCodeMessageInfo]] = [:]
     private var liveSessionStatuses: [String: OpenCodeSessionActivity] = [:]
+    private var statusDebounceTask: Task<Void, Never>?
     private var pendingPermissionsBySession: [String: [OpenCodePermissionRequest]] = [:]
     private var pendingQuestionsBySession: [String: [OpenCodeQuestionRequest]] = [:]
     private var promptDraftsByKey: [String: String] = [:]
@@ -2223,7 +2224,12 @@ final class AppStore {
             }
         case .sessionStatusChanged(let sessionID, let status):
             let previousStatus = liveSessionStatuses[sessionID]
-            liveSessionStatuses[sessionID] = status
+            statusDebounceTask?.cancel()
+            statusDebounceTask = Task { [weak self] in
+                try? await Task.sleep(for: .milliseconds(500))
+                guard let self, !Task.isCancelled else { return }
+                liveSessionStatuses[sessionID] = status
+            }
             if case .idle = status {
                 settleSessionActivity(sessionID: sessionID, projectID: projectID)
             }

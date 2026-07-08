@@ -28,6 +28,7 @@ private final class DragRegionView: NSView {
 
 struct WindowChromeConfigurator: NSViewRepresentable {
     let updateService: AppUpdateService
+    @State private static var hasInitializedWindow = false
 
     func makeNSView(context: Context) -> NSView {
         let view = NSView()
@@ -58,5 +59,12 @@ struct WindowChromeConfigurator: NSViewRepresentable {
         }
         window.minSize = NSSize(width: 960, height: 540)
         updateService.attach(to: window)
+
+        if !Self.hasInitializedWindow {
+            Self.hasInitializedWindow = true
+            if let screenFrame = window.screen?.visibleFrame {
+                window.setFrame(screenFrame, display: true)
+            }
+        }
     }
 }
