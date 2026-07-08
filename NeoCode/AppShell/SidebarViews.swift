@@ -285,7 +285,6 @@ struct ProjectTreeNode: View {
                         .padding(.vertical, 7)
                     }
                 }
-                .padding(.leading, 14)
             }
         }
         .overlay(alignment: .top) {
