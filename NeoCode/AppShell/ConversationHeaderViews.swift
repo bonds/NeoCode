@@ -18,6 +18,23 @@ struct SessionHeaderView: View {
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
             HStack(spacing: 8) {
+                if let parentID = session.parentID,
+                   let parent = store.sessionSummary(for: parentID) {
+                    Button(action: { store.selectSession(parentID) }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 12, weight: .semibold))
+
+                            Text(parent.title)
+                                .font(.neoMonoSmall)
+                                .lineLimit(1)
+                        }
+                        .foregroundStyle(NeoCodeTheme.accent)
+                    }
+                    .buttonStyle(.plain)
+                    .help(localized("Back to parent session", locale: locale))
+                }
+
                 Text(session.title)
                     .font(.system(size: 15, weight: .semibold, design: .default))
                     .foregroundStyle(NeoCodeTheme.textPrimary)
