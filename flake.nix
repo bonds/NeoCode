@@ -30,11 +30,9 @@
         /usr/bin/plutil -remove SUFeedURL $out/Applications/NeoCode.app/Contents/Info.plist 2>/dev/null || true
         /usr/bin/plutil -remove SUEnableAutomaticUpdates $out/Applications/NeoCode.app/Contents/Info.plist 2>/dev/null || true
 
-        # Inject fork version into About panel:
-        #   Version 0.8.1
-        #   (202607080111-b735a43)
-        MARKETING="${version%%-*}"
-        BUILD_IDENTIFIER="${version#*-}"
+        # Inject fork version ($$ escapes dollar in nix single-quoted strings):
+        MARKETING=$${version%%-*}
+        BUILD_IDENTIFIER=$${version#*-}
         /usr/bin/plutil -replace CFBundleShortVersionString -string "$MARKETING" $out/Applications/NeoCode.app/Contents/Info.plist
         /usr/bin/plutil -replace CFBundleVersion -string "$BUILD_IDENTIFIER" $out/Applications/NeoCode.app/Contents/Info.plist
 
