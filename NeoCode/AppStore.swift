@@ -827,6 +827,21 @@ final class AppStore {
         selectSession(sessionID)
     }
 
+    @MainActor
+    func syncChildSessions(for parentSessionID: String, using runtime: OpenCodeRuntime) async {
+        guard let projectID = projectID(for: parentSessionID),
+              let project = projects.first(where: { $0.id == projectID }),
+              !project.sessions.contains(where: { $0.parentID == parentSessionID })
+        else { return }
+
+        guard let service = await connectProject(projectID, using: runtime, includeComposerOptions: false) else { return }
+        let remoteSessions = (try? await service.listSessions()) ?? []
+        for remote in remoteSessions where remote.parentID == parentSessionID {
+            upsert(session: SessionSummary(session: remote), in: projectID, preferTopInsertion: true)
+        }
+        reevaluateRuntimeRetention(using: runtime)
+    }
+
     func addProject(directoryURL: URL) {
         let resolvedURL = directoryURL.standardizedFileURL.resolvingSymlinksInPath()
         let projectPath = resolvedURL.path

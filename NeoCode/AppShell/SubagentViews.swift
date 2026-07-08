@@ -2,7 +2,9 @@ import SwiftUI
 
 struct SubagentTaskCardView: View {
     @Environment(AppStore.self) private var store
+    @Environment(OpenCodeRuntime.self) private var runtime
     @Environment(\.locale) private var locale
+    @State private var fetchedSubagentID: String?
 
     let toolCall: ChatMessage.ToolCall
 
@@ -24,6 +26,14 @@ struct SubagentTaskCardView: View {
                 ForEach(subagents) { subagent in
                     subagentCard(subagent)
                 }
+            }
+        }
+        .task {
+            guard subagents.isEmpty, let sessionID else { return }
+            await store.syncChildSessions(for: sessionID, using: runtime)
+            // Re-check after sync
+            if let id = subagentSessionID, fetchedSubagentID == nil {
+                fetchedSubagentID = id
             }
         }
     }
@@ -196,6 +206,9 @@ struct SubagentTaskCardView: View {
     }
 
     private var subagentSessionID: String? {
+        // Return fetched ID first (from runtime sync)
+        if let fetched = fetchedSubagentID { return fetched }
+
         // First try: parse from output (available when task completes)
         if let raw = toolCall.output?.displayString {
             let pattern = /<task id="(ses_[a-zA-Z0-9]+)"/
@@ -203,7 +216,7 @@ struct SubagentTaskCardView: View {
                 return String(match.1)
             }
         }
-        // Second try: parse from detail (sometask content here too)
+        // Second try: parse from detail (sometimes the ID appears here)
         let pattern = /<task id="(ses_[a-zA-Z0-9]+)"/
         if let match = toolCall.detail?.firstMatch(of: pattern) {
             return String(match.1)
