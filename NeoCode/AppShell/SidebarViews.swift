@@ -254,11 +254,25 @@ struct ProjectTreeNode: View {
                         ProjectSessionSyncRow()
                     }
 
-                    ForEach(project.displayedSessions(showAll: showsAllSessions)) { session in
-                        SessionTreeRow(session: session, isSelected: store.selectedSessionID == session.id)
+                    ForEach(project.displayedSessions(showAll: showsAllSessions)) { root in
+                        let children = project.childSessions(for: root.id)
+                        let isRootSelected = store.selectedSessionID == root.id
+                        let isAnyChildSelected = children.contains(where: { $0.id == store.selectedSessionID })
+
+                        SessionTreeRow(session: root, isSelected: isRootSelected || isAnyChildSelected)
                             .onTapGesture {
-                                store.selectSession(session.id)
+                                store.selectSession(root.id)
                             }
+
+                        if !children.isEmpty {
+                            ForEach(children) { child in
+                                SessionTreeRow(session: child, isSelected: store.selectedSessionID == child.id)
+                                    .padding(.leading, 24)
+                                    .onTapGesture {
+                                        store.selectSession(child.id)
+                                    }
+                            }
+                        }
                     }
 
                     if project.hasHiddenSessions {
