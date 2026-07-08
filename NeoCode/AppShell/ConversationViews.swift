@@ -629,7 +629,7 @@ struct ConversationView: View {
         )
         .frame(maxWidth: .infinity, alignment: .center)
         .readHeight {
-            guard abs(promptOverlayHeight - $0) > 0.5 else { return }
+            guard abs(promptOverlayHeight - $0) > 2.0 else { return }
             promptOverlayHeight = $0
         }
         .animation(.easeOut(duration: 0.16), value: showsAuxiliaryPopover)

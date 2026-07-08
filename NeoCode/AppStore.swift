@@ -1296,12 +1296,17 @@ final class AppStore {
     }
 
     private func dashboardService(for project: ProjectSummary, runtime: OpenCodeRuntime) async -> DashboardRuntimeService? {
+        let hadConnection = runtime.connection(for: project.path) != nil
+        await runtime.ensureRunning(for: project.path)
+
         guard let connection = runtime.connection(for: project.path) else {
+            logger.error("Dashboard refresh could not start runtime for project: \(project.path, privacy: .public)")
             return nil
         }
 
         runtime.markUsed(for: project.path)
-        return DashboardRuntimeService(service: OpenCodeClient(connection: connection), shouldStopAfterUse: false)
+        let shouldStopAfterUse = !hadConnection && liveServices[project.id] == nil
+        return DashboardRuntimeService(service: OpenCodeClient(connection: connection), shouldStopAfterUse: shouldStopAfterUse)
     }
 
     func syncSelectedSession(using runtime: OpenCodeRuntime) async {
