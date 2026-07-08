@@ -424,21 +424,25 @@ struct SessionTreeRow: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            if isChild {
-                TreeBranchConnector()
-                    .stroke(NeoCodeTheme.textMuted, style: StrokeStyle(lineWidth: 0.8, lineCap: .round))
-                    .frame(width: 28, height: 18)
-            }
-
-            if hasChildren {
-                Button(action: { store.toggleSessionChildrenCollapsed(session.id) }) {
-                    Image(systemName: store.isSessionChildrenCollapsed(session.id) ? "chevron.right" : "chevron.down")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(NeoCodeTheme.textMuted)
-                        .frame(width: 28, height: 28)
-                        .contentShape(Rectangle())
+            Group {
+                if isChild {
+                    TreeBranchConnector()
+                        .stroke(NeoCodeTheme.textMuted, style: StrokeStyle(lineWidth: 0.8, lineCap: .round))
+                        .frame(width: 28)
+                } else if hasChildren {
+                    Button(action: { store.toggleSessionChildrenCollapsed(session.id) }) {
+                        Image(systemName: store.isSessionChildrenCollapsed(session.id) ? "chevron.right" : "chevron.down")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(NeoCodeTheme.textMuted)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .frame(width: 28)
+                } else {
+                    Color.clear
+                        .frame(width: 28)
                 }
-                .buttonStyle(.plain)
             }
 
             Text(currentSession.title)
