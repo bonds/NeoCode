@@ -21,6 +21,10 @@ This is the [bonds/NeoCode](https://github.com/bonds/NeoCode) fork. Changes rela
 - **Responsive conversation column** — the transcript and composer scale to the available window width instead of a fixed 820pt column, using a `GeometryReader`-based `columnWidth = max(availableWidth − 32, 480)`.
 - **Nix flake packaging** — `flake.nix` exposes `packages.aarch64-darwin.default` consuming the prebuilt DMG from the GitHub release.
 
+### Fork versioning
+
+The fork's `MARKETING_VERSION` in `project.pbxproj` tracks upstream + 0.0.1 (currently **0.8.1**). The nix `version` field in `flake.nix` uses the format `<marketing_version>-<yyyymmddhhmm>-<git-short-sha>` (e.g. `0.8.1-202607081404-63257dd`). Each `neocode-release` run creates a unique, ascending version. This is what shows in the macOS **About** panel (`Version 0.8.1`) and in GitHub Releases (`v0.8.1-202607081404-63257dd`).
+
 ## Table of Contents
 
 - [Background](#background)
