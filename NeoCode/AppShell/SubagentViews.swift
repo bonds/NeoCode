@@ -29,9 +29,8 @@ struct SubagentTaskCardView: View {
             }
         }
         .task {
-            guard subagents.isEmpty, let sessionID else { return }
+            guard let sessionID else { return }
             await store.syncChildSessions(for: sessionID, using: runtime)
-            // Re-check after sync
             if let id = subagentSessionID, fetchedSubagentID == nil {
                 fetchedSubagentID = id
             }

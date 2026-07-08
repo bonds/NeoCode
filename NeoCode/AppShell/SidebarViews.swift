@@ -263,6 +263,13 @@ struct ProjectTreeNode: View {
                             .onTapGesture {
                                 store.selectSession(root.id)
                             }
+                            .task(id: root.id) {
+                                while !Task.isCancelled {
+                                    try? await Task.sleep(for: .seconds(3))
+                                    guard !Task.isCancelled else { break }
+                                    await store.syncChildSessions(for: root.id, using: runtime)
+                                }
+                            }
 
                         if !children.isEmpty, !store.isSessionChildrenCollapsed(root.id) {
                             ForEach(children) { child in
