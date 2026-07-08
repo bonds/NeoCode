@@ -8,7 +8,7 @@
   outputs = { self, nixpkgs }: let
     system = "aarch64-darwin";
     pkgs = nixpkgs.legacyPackages.${system};
-    version = "0.8.1-202607081307-f6eeb10";
+    version = "0.8.1-202607081326-d8bf32f";
   in {
     packages.${system}.default = pkgs.stdenvNoCC.mkDerivation {
       pname = "neocode";
@@ -16,7 +16,7 @@
 
       src = pkgs.fetchurl {
         url = "https://github.com/bonds/NeoCode/releases/download/v${version}/NeoCode.dmg";
-        hash = "sha256-mT1aJ5L+95HZCWcbAgvlKtG/us1mwRSDcV7FFLCfWxs=";
+        hash = "sha256-A0QuEWrzLtMObFRReSRsg6N5okEFy+CzcEXwLnMVngo=";
       };
 
       sourceRoot = ".";
