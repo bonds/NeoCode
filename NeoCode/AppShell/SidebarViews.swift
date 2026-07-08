@@ -342,6 +342,14 @@ struct ProjectTreeNode: View {
 
                 Button(localized("Open Project", locale: locale), action: openProject)
                 Button(localized("Reveal in Finder", locale: locale), action: revealProject)
+
+                Divider()
+
+                Button(role: .destructive) {
+                    store.removeProject(project.id)
+                } label: {
+                    Label(localized("Remove Project", locale: locale), systemImage: "trash")
+                }
             } label: {
                 Image(systemName: "ellipsis")
                     .font(.system(size: 12, weight: .medium))

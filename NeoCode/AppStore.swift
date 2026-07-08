@@ -866,6 +866,23 @@ final class AppStore {
         scheduleGitRefreshLoop(for: project.path)
     }
 
+    func removeProject(_ projectID: ProjectSummary.ID) {
+        guard let index = projects.firstIndex(where: { $0.id == projectID }) else { return }
+
+        let wasSelected = selectedProjectID == projectID
+        projects.remove(at: index)
+
+        if wasSelected {
+            selectedProjectID = nil
+            selectedSessionID = nil
+            primePromptState(for: nil)
+            scheduleGitRefreshLoop(for: nil)
+        }
+
+        scheduleProjectPersistence()
+        lastError = nil
+    }
+
     func moveProject(_ projectID: ProjectSummary.ID, before destinationProjectID: ProjectSummary.ID) {
         guard projectID != destinationProjectID,
               let sourceIndex = projects.firstIndex(where: { $0.id == projectID }),
