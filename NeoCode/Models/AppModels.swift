@@ -28,6 +28,7 @@ struct ProjectSummary: Codable, Identifiable, Hashable {
 
     func displayedSessions(showAll: Bool = false) -> [SessionSummary] {
         let orderedSessions = sessions
+            .filter { $0.parentID == nil }
             .enumerated()
             .sorted { lhs, rhs in
                 if lhs.element.sidebarOrderingDate != rhs.element.sidebarOrderingDate {
@@ -43,7 +44,7 @@ struct ProjectSummary: Codable, Identifiable, Hashable {
     }
 
     var hiddenSessionCount: Int {
-        max(0, sessions.count - Self.displayedSessionLimit)
+        max(0, sessions.filter { $0.parentID == nil }.count - Self.displayedSessionLimit)
     }
 
     var hasHiddenSessions: Bool {
@@ -739,4 +740,14 @@ enum SessionStatus: String, Codable, Equatable, Hashable {
 
 enum SeedProjects {
     static let defaults: [ProjectSummary] = []
+}
+
+extension ProjectSummary {
+    var rootSessions: [SessionSummary] {
+        sessions.filter { $0.parentID == nil }
+    }
+
+    func childSessions(for parentID: String) -> [SessionSummary] {
+        sessions.filter { $0.parentID == parentID }
+    }
 }
