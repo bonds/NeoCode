@@ -8,6 +8,17 @@
 import AppKit
 import SwiftUI
 
+private struct OpenSettingsKey: FocusedValueKey {
+    typealias Value = () -> Void
+}
+
+extension FocusedValues {
+    var openSettings: (() -> Void)? {
+        get { self[OpenSettingsKey.self] }
+        set { self[OpenSettingsKey.self] = newValue }
+    }
+}
+
 @main
 struct NeoCodeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
@@ -23,6 +34,23 @@ struct NeoCodeApp: App {
         .defaultSize(width: 1100, height: 580)
         .windowResizability(.contentMinSize)
         .windowStyle(.hiddenTitleBar)
+        .commands {
+            CommandGroup(replacing: .appSettings) {
+                SettingsButton()
+            }
+        }
+    }
+}
+
+private struct SettingsButton: View {
+    @FocusedValue(\.openSettings) private var openSettings
+
+    var body: some View {
+        Button("Settings\u{2026}") {
+            openSettings?()
+        }
+        .keyboardShortcut(",", modifiers: .command)
+        .disabled(openSettings == nil)
     }
 }
 
@@ -230,6 +258,7 @@ private struct AppSceneView: View {
             .environment(runtime)
             .environment(updateService)
             .environment(\.locale, store.appSettings.general.appLanguage.locale)
+            .focusedValue(\.openSettings, { store.openSettings() })
             .task(id: store.appSettings.general.opencodeExecutablePath) {
                 runtime.preferredExecutablePath = store.appSettings.general.opencodeExecutablePath
             }
