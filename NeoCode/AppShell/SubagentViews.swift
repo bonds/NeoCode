@@ -196,10 +196,26 @@ struct SubagentTaskCardView: View {
     }
 
     private var subagentSessionID: String? {
-        guard let raw = toolCall.output?.displayString else { return nil }
+        // First try: parse from output (available when task completes)
+        if let raw = toolCall.output?.displayString {
+            let pattern = /<task id="(ses_[a-zA-Z0-9]+)"/
+            if let match = raw.firstMatch(of: pattern) {
+                return String(match.1)
+            }
+        }
+        // Second try: parse from detail (sometask content here too)
         let pattern = /<task id="(ses_[a-zA-Z0-9]+)"/
-        guard let match = raw.firstMatch(of: pattern) else { return nil }
-        return String(match.1)
+        if let match = toolCall.detail?.firstMatch(of: pattern) {
+            return String(match.1)
+        }
+        // Third try: look for sessions in the store with parentID == currentSessionID
+        if let currentID = store.selectedSessionID,
+           let project = store.projects.first(where: { $0.sessions.contains(where: { $0.id == currentID }) }) {
+            if let child = project.sessions.first(where: { $0.parentID == currentID }) {
+                return child.id
+            }
+        }
+        return nil
     }
 
     private func stringValue(for key: String) -> String? {
