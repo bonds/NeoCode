@@ -805,14 +805,14 @@ private struct ComposerActivityIndicator: View {
     let state: ComposerActivityState
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 8.0)) { timeline in
             let wake = wakeContribution(at: timeline.date)
 
             MetaballOrb(
                 size: 32,
                 renderScale: 1.0,
                 internalResolutionScale: 1.0,
-                animationInterval: 1.0 / 20.0,
+                animationInterval: 1.0 / 8.0,
                 intensity: min(1, activityIntensity + wake * 0.24),
                 pulse: min(0.28, activityBasePulse + wake * 0.08),
                 warmth: min(1, activityWarmth + wake * 0.07),

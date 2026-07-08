@@ -48,6 +48,7 @@ struct ConversationView: View {
     // frame, which keeps the scrollbar track reaching the full height of the
     // pane.
     @State private var promptOverlayHeight: CGFloat = 0
+    @State private var heightUpdateTask: Task<Void, Never>?
     @State private var textInputHeight: CGFloat = 36
     @State private var isPinnedToBottom = true
     @State private var isMaintainingPinnedPosition = false
@@ -631,8 +632,13 @@ struct ConversationView: View {
         )
         .frame(maxWidth: .infinity, alignment: .center)
         .readHeight {
-            guard abs(promptOverlayHeight - $0) > 2.0 else { return }
-            promptOverlayHeight = $0
+            let newHeight = $0
+            heightUpdateTask?.cancel()
+            heightUpdateTask = Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(50))
+                guard !Task.isCancelled, abs(promptOverlayHeight - newHeight) > 2.0 else { return }
+                promptOverlayHeight = newHeight
+            }
         }
         .animation(.easeOut(duration: 0.16), value: showsAuxiliaryPopover)
     }

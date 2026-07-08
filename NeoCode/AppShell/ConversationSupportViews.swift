@@ -52,7 +52,7 @@ struct EmptyConversationView: View {
                     text: store.draft,
                     renderScale: 1.0,
                     internalResolutionScale: 1.15,
-                    animationInterval: 1.0 / 20.0
+                    animationInterval: 1.0 / 5.0
                 )
                 .frame(width: 106, height: 100)
 
