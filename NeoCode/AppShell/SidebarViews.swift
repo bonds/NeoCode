@@ -267,7 +267,6 @@ struct ProjectTreeNode: View {
                         if !children.isEmpty {
                             ForEach(children) { child in
                                 SessionTreeRow(session: child, isSelected: store.selectedSessionID == child.id, isChild: true)
-                                    .padding(.leading, 24)
                                     .onTapGesture {
                                         store.selectSession(child.id)
                                     }
@@ -426,8 +425,8 @@ struct SessionTreeRow: View {
         HStack(spacing: 6) {
             if isChild {
                 TreeBranchConnector()
-                    .stroke(NeoCodeTheme.textMuted.opacity(0.35), style: StrokeStyle(lineWidth: 1, lineCap: .round))
-                    .frame(width: 14, height: 18)
+                    .stroke(NeoCodeTheme.textMuted, style: StrokeStyle(lineWidth: 1, lineCap: .round))
+                    .frame(width: 20, height: 18)
             }
 
             Text(currentSession.title)
