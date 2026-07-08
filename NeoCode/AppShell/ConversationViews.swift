@@ -534,14 +534,7 @@ struct ConversationView: View {
     }
 
     private func composerOverlay(using proxy: ScrollViewProxy, columnWidth: CGFloat) -> some View {
-        HStack(alignment: .bottom, spacing: 0) {
-            composerDock(using: proxy, columnWidth: columnWidth)
-
-            Color.clear
-                .frame(width: scrollbarCompensation, height: 1)
-                .allowsHitTesting(false)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        composerDock(using: proxy, columnWidth: columnWidth)
     }
 
     private func composerDock(using proxy: ScrollViewProxy, columnWidth: CGFloat) -> some View {
