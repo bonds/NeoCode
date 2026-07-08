@@ -77,7 +77,7 @@ struct ConversationView: View {
     private let transcriptColumnWidth: CGFloat = 820
     private let transcriptHorizontalInset: CGFloat = 32
     private let composerTopPadding: CGFloat = 8
-    private let composerBottomPadding: CGFloat = 14
+    private let composerBottomPadding: CGFloat = 28
     private let composerControlSpacing: CGFloat = 12
     private let queuedMessageReservedHeight: CGFloat = 100
     private let queuedMessageStackOverlap: CGFloat = 20
