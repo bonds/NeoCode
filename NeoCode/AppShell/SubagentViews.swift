@@ -4,10 +4,12 @@ struct SubagentTaskCardView: View {
     @Environment(AppStore.self) private var store
     @Environment(\.locale) private var locale
 
-    let sessionID: String
+    let toolCall: ChatMessage.ToolCall
+
+    private var sessionID: String? { store.selectedSessionID }
 
     private var subagentSessions: [SessionSummary] {
-        guard let project = store.projects.first(where: { $0.sessions.contains(where: { $0.id == sessionID }) })
+        guard let sessionID, let project = store.projects.first(where: { $0.sessions.contains(where: { $0.id == sessionID }) })
         else { return [] }
         return project.childSessions(for: sessionID)
     }
@@ -15,15 +17,76 @@ struct SubagentTaskCardView: View {
     var body: some View {
         let subagents = subagentSessions
 
-        if subagents.isEmpty {
-            EmptyView()
-        } else {
-            VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12) {
+            if subagents.isEmpty {
+                taskToolCard
+            } else {
                 ForEach(subagents) { subagent in
                     subagentCard(subagent)
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private var taskToolCard: some View {
+        let status = toolStatus
+        let subagentType = stringValue(for: "subagent_type") ?? "general"
+        let promptText = stringValue(for: "description") ?? stringValue(for: "prompt") ?? toolCall.detail
+
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: statusIcon(status))
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(statusColor(status))
+                .frame(width: 24, height: 24)
+                .background(
+                    Circle()
+                        .fill(statusColor(status).opacity(0.18))
+                )
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text(subagentType)
+                        .font(.neoBody)
+                        .foregroundStyle(NeoCodeTheme.textPrimary)
+                        .lineLimit(1)
+
+                    Text(statusLabel(status))
+                        .font(.neoMonoSmall)
+                        .foregroundStyle(statusColor(status))
+                }
+
+                if let promptText, !promptText.isEmpty {
+                    Text(promptText)
+                        .font(.neoMonoSmall)
+                        .foregroundStyle(NeoCodeTheme.textMuted)
+                        .lineLimit(2)
+                }
+
+                if let outputText = outputExcerpt {
+                    Text(outputText)
+                        .font(.neoMonoSmall)
+                        .foregroundStyle(NeoCodeTheme.textSecondary)
+                        .lineLimit(3)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(NeoCodeTheme.panelSoft)
+                        )
+                }
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(NeoCodeTheme.panelRaised)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(NeoCodeTheme.line, lineWidth: 1)
+                )
+        )
     }
 
     @ViewBuilder
@@ -91,6 +154,30 @@ struct SubagentTaskCardView: View {
                         .stroke(NeoCodeTheme.line, lineWidth: 1)
                 )
         )
+    }
+
+    private var toolStatus: SubagentStatus {
+        if toolCall.status == .completed { return .completed }
+        if toolCall.status == .error { return .error }
+        return .running
+    }
+
+    private var outputExcerpt: String? {
+        guard let raw = toolCall.output?.displayString else { return nil }
+        let cleaned = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .nonEmptyTrimmed
+        guard let cleaned else { return nil }
+        let maxLength = 200
+        return cleaned.count > maxLength ? String(cleaned.prefix(maxLength)) + "..." : cleaned
+    }
+
+    private func stringValue(for key: String) -> String? {
+        guard case .object(let dict) = toolCall.input,
+              case .string(let value) = dict[key]
+        else { return nil }
+        return value
     }
 
     private enum SubagentStatus {
