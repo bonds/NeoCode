@@ -804,6 +804,28 @@ final class AppStore {
         scheduleGitRefreshLoop(for: selectedProject?.path)
     }
 
+    func navigateToSubagent(sessionID: String, parentSessionID: String) {
+        guard let projectIndex = projects.firstIndex(where: { $0.sessions.contains(where: { $0.id == parentSessionID }) }) else {
+            selectSession(sessionID)
+            return
+        }
+        let projectID = projects[projectIndex].id
+
+        if !projects[projectIndex].sessions.contains(where: { $0.id == sessionID }) {
+            let placeholder = SessionSummary(
+                id: sessionID,
+                parentID: parentSessionID,
+                title: sessionID,
+                lastUpdatedAt: .now,
+                status: .idle,
+                isEphemeral: true
+            )
+            upsert(session: placeholder, in: projectID, preferTopInsertion: true)
+        }
+
+        selectSession(sessionID)
+    }
+
     func addProject(directoryURL: URL) {
         let resolvedURL = directoryURL.standardizedFileURL.resolvingSymlinksInPath()
         let projectPath = resolvedURL.path

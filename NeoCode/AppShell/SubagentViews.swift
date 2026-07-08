@@ -75,6 +75,28 @@ struct SubagentTaskCardView: View {
                                 .fill(NeoCodeTheme.panelSoft)
                         )
                 }
+
+                if let subagentID = subagentSessionID {
+                    HStack(spacing: 16) {
+                        Spacer()
+                        Button(localized("View", locale: locale)) {
+                            if let parentID = store.selectedSessionID {
+                                store.navigateToSubagent(sessionID: subagentID, parentSessionID: parentID)
+                            } else {
+                                store.selectSession(subagentID)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .font(.neoMonoSmall)
+                        .foregroundStyle(NeoCodeTheme.accent)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(NeoCodeTheme.accentDim.opacity(0.22))
+                        )
+                    }
+                }
             }
         }
         .padding(.horizontal, 14)
@@ -171,6 +193,13 @@ struct SubagentTaskCardView: View {
         guard let cleaned else { return nil }
         let maxLength = 200
         return cleaned.count > maxLength ? String(cleaned.prefix(maxLength)) + "..." : cleaned
+    }
+
+    private var subagentSessionID: String? {
+        guard let raw = toolCall.output?.displayString else { return nil }
+        let pattern = /<task id="(ses_[a-zA-Z0-9]+)"/
+        guard let match = raw.firstMatch(of: pattern) else { return nil }
+        return String(match.1)
     }
 
     private func stringValue(for key: String) -> String? {
