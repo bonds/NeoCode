@@ -266,7 +266,7 @@ struct ProjectTreeNode: View {
 
                         if !children.isEmpty {
                             ForEach(children) { child in
-                                SessionTreeRow(session: child, isSelected: store.selectedSessionID == child.id)
+                                SessionTreeRow(session: child, isSelected: store.selectedSessionID == child.id, isChild: true)
                                     .padding(.leading, 24)
                                     .onTapGesture {
                                         store.selectSession(child.id)
@@ -420,9 +420,16 @@ struct SessionTreeRow: View {
 
     let session: SessionSummary
     let isSelected: Bool
+    var isChild: Bool = false
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 6) {
+            if isChild {
+                TreeBranchConnector()
+                    .stroke(NeoCodeTheme.line, style: StrokeStyle(lineWidth: 1, lineCap: .round))
+                    .frame(width: 14, height: 18)
+            }
+
             Text(currentSession.title)
                 .font(.neoBody)
                 .foregroundStyle(isSelected ? NeoCodeTheme.textPrimary : NeoCodeTheme.textSecondary)
@@ -779,5 +786,15 @@ private struct SidebarChrome: View {
     var body: some View {
         Rectangle()
             .fill(Color.clear)
+    }
+}
+
+struct TreeBranchConnector: Shape {
+    func path(in rect: CGRect) -> Path {
+        Path { path in
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.midY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+        }
     }
 }
