@@ -3154,6 +3154,12 @@ final class AppStore {
                     projects[projectIndex].sessions.insert(SessionSummary(session: remote), at: stored)
                     stored += 1
                 }
+                // Sessions with children start collapsed
+                for root in allSessions where root.parentID == nil {
+                    if allSessions.contains(where: { $0.parentID == root.id }) {
+                        collapsedChildSessions.insert(root.id)
+                    }
+                }
             }
 
             if let selectedSessionID,
