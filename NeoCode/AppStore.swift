@@ -488,10 +488,17 @@ final class AppStore {
     }
 
     func liveActivity(for sessionID: String) -> OpenCodeSessionActivity? {
-        effectiveLiveSessionActivity(
+        let activity = effectiveLiveSessionActivity(
             for: sessionID,
             transcript: transcript(for: sessionID)
         )
+        // 10-second cooldown: show as busy if we were busy recently
+        if case .idle = activity,
+           let lastBusy = lastBusyAt[sessionID],
+           Date().timeIntervalSince(lastBusy) < 10 {
+            return .busy
+        }
+        return activity
     }
 
     func handleApplicationDidBecomeActive() {
@@ -4138,13 +4145,6 @@ final class AppStore {
             || hasBufferedTextDeltas(for: sessionID)
         let isAwaitingFirstAssistantUpdate = transcript.isEmpty || transcript.last?.role == .user
         let isAwaitingInput = pendingPermission(for: sessionID) != nil || pendingQuestion(for: sessionID) != nil
-
-        // 10-second cooldown: show as busy if we were busy recently
-        if case .idle = activity,
-           let lastBusy = lastBusyAt[sessionID],
-           Date().timeIntervalSince(lastBusy) < 10 {
-            return .busy
-        }
 
         switch activity {
         case .idle:
