@@ -3945,7 +3945,11 @@ final class AppStore {
         if let messageIndex = transcript.firstIndex(where: { $0.id == message.id }) {
             transcript[messageIndex] = message
         } else {
-            transcript.append(message)
+            // Insert in timestamp order to keep messages sorted even when
+            // SSE events arrive out of order (e.g. thinking after response)
+            let insertIndex = transcript.firstIndex(where: { $0.timestamp > message.timestamp })
+                ?? transcript.endIndex
+            transcript.insert(message, at: insertIndex)
         }
         setTranscript(transcript, for: sessionID)
         projects[indices.project].sessions[indices.session].lastUpdatedAt = message.timestamp
@@ -5725,8 +5729,12 @@ final class AppStore {
                     kind: .plain,
                     isInProgress: true
                 )
-                transcript.append(placeholder)
-                messageIndex = transcript.endIndex - 1
+                // Insert in timestamp order
+                let insertIndex = transcript.firstIndex(where: { $0.timestamp > buffered.updatedAt })
+                    ?? transcript.endIndex
+                transcript.insert(placeholder, at: insertIndex)
+                messageIndex = transcript.firstIndex(where: { $0.id == key.partID })
+                    ?? (transcript.endIndex - 1)
             }
 
             transcript[messageIndex].text += buffered.text
