@@ -1123,10 +1123,7 @@ struct GrowingTextView: NSViewRepresentable {
             if commandSelector == #selector(NSResponder.moveUp(_:)) {
                 if parent.onMoveAuxiliarySelection(-1) { return true }
                 if let historyText = parent.onNavigateHistory(true) {
-                    textView.string = historyText
-                    if let ct = textView as? ComposerNSTextView {
-                        ct.updatePlaceholderVisibility()
-                    }
+                    applyHistoryText(historyText, to: textView)
                     return true
                 }
                 return false
@@ -1135,12 +1132,9 @@ struct GrowingTextView: NSViewRepresentable {
             if commandSelector == #selector(NSResponder.moveDown(_:)) {
                 if parent.onMoveAuxiliarySelection(1) { return true }
                 if let historyText = parent.onNavigateHistory(false) {
-                    textView.string = historyText
+                    applyHistoryText(historyText, to: textView)
                 } else {
-                    textView.string = ""
-                }
-                if let ct = textView as? ComposerNSTextView {
-                    ct.updatePlaceholderVisibility()
+                    applyHistoryText("", to: textView)
                 }
                 return true
             }
@@ -1184,6 +1178,15 @@ struct GrowingTextView: NSViewRepresentable {
 
             parent.onPrimaryAction()
             return true
+        }
+
+        private func applyHistoryText(_ text: String, to textView: NSTextView) {
+            textView.string = text
+            parent.text = text
+            recalculateHeight(for: textView)
+            if let ct = textView as? ComposerNSTextView {
+                ct.updatePlaceholderVisibility()
+            }
         }
 
         func recalculateHeight(for textView: NSTextView) {
