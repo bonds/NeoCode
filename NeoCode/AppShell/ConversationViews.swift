@@ -921,10 +921,7 @@ struct ConversationView: View {
         }
 
         if transcriptCount > 0 {
-            // Scroll on next tick so the view lays out at the new loadedMessageCount first
-            DispatchQueue.main.async {
-                self.completeInitialScroll(using: proxy)
-            }
+            completeInitialScroll(using: proxy)
         } else {
             finishInitialPresentation()
         }
