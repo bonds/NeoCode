@@ -907,7 +907,7 @@ final class AppStore {
     }
 
     func isProjectCollapsed(_ projectID: ProjectSummary.ID) -> Bool {
-        projects.first(where: { $0.id == projectID })?.settings.isCollapsedInSidebar ?? true
+        projects.first(where: { $0.id == projectID })?.settings.isCollapsedInSidebar ?? false
     }
 
     func toggleSessionChildrenCollapsed(_ sessionID: String) {
@@ -3136,15 +3136,6 @@ final class AppStore {
                 .sorted { $0.updatedAt > $1.updatedAt }
             guard !Task.isCancelled else { return }
 
-            // Silently store child sessions (no upsert pipeline)
-            if let projectIndex = projects.firstIndex(where: { $0.id == projectID }) {
-                for remote in allSessions where remote.parentID != nil {
-                    guard !projects[projectIndex].sessions.contains(where: { $0.id == remote.id })
-                    else { continue }
-                    projects[projectIndex].sessions.insert(SessionSummary(session: remote), at: 0)
-                }
-            }
-
             let sessions = allSessions.filter(\.isRootVisible)
             replaceSessions(
                 in: projectID,
@@ -3153,6 +3144,17 @@ final class AppStore {
                     return SessionSummary(session: session, fallbackTitle: fallbackTitle)
                 }
             )
+
+            // Silently store child sessions after replaceSessions (which clears the array)
+            if let projectIndex = projects.firstIndex(where: { $0.id == projectID }) {
+                var stored = 0
+                for remote in allSessions where remote.parentID != nil {
+                    guard !projects[projectIndex].sessions.contains(where: { $0.id == remote.id })
+                    else { continue }
+                    projects[projectIndex].sessions.insert(SessionSummary(session: remote), at: stored)
+                    stored += 1
+                }
+            }
 
             if let selectedSessionID,
                self.projectID(for: selectedSessionID) == projectID,
