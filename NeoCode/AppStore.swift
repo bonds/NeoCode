@@ -227,6 +227,8 @@ final class AppStore {
     private var promptPersistTask: Task<Void, Never>?
     private var yoloSessionKeys: Set<String>
     private var collapsedChildSessions: Set<String> = []
+    /// Projects that should be collapsed on this launch. Repopulated on each restart.
+    private var projectsCollapsedOnLaunch = Set<ProjectSummary.ID>()
     private var favoriteModelIDs: Set<String> = []
     private var isApplyingSessionComposerState = false
     private var autoRespondedPermissionIDs: [String: Date] = [:]
@@ -269,6 +271,7 @@ final class AppStore {
         self.persistence = persistence
         self.services = services
         self.projects = extractedState.projects
+        self.projectsCollapsedOnLaunch = Set(extractedState.projects.map(\.id))
         self.transcriptStateBySessionID = extractedState.transcripts
         self.selectedProjectID = initialWorkspaceSelection.projectID
         self.selectedContent = initialWorkspaceSelection.content
@@ -308,6 +311,7 @@ final class AppStore {
         self.persistence = persistence
         self.services = services
         self.projects = extractedState.projects
+        self.projectsCollapsedOnLaunch = Set(extractedState.projects.map(\.id))
         self.transcriptStateBySessionID = extractedState.transcripts
         self.selectedProjectID = initialWorkspaceSelection.projectID
         self.selectedContent = initialWorkspaceSelection.content
@@ -904,7 +908,13 @@ final class AppStore {
     }
 
     func isProjectCollapsed(_ projectID: ProjectSummary.ID) -> Bool {
-        projects.first(where: { $0.id == projectID })?.settings.isCollapsedInSidebar ?? true
+        if projectsCollapsedOnLaunch.contains(projectID) {
+            projectsCollapsedOnLaunch.remove(projectID)
+            if let idx = projects.firstIndex(where: { $0.id == projectID }) {
+                projects[idx].settings.isCollapsedInSidebar = true
+            }
+        }
+        return projects.first(where: { $0.id == projectID })?.settings.isCollapsedInSidebar ?? true
     }
 
     func toggleSessionChildrenCollapsed(_ sessionID: String) {
