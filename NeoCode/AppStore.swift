@@ -5340,26 +5340,28 @@ final class AppStore {
         if inputHistoryBySession[sessionID]?.last != text {
             inputHistoryBySession[sessionID, default: []].append(text)
         }
-        inputHistoryIndexBySession[sessionID] = (inputHistoryBySession[sessionID]?.count ?? 1) - 1
+        // Position starts past the end so first up-arrow goes to the last item
+        inputHistoryIndexBySession[sessionID] = inputHistoryBySession[sessionID]?.count ?? 0
         persistence.inputHistory.saveInputHistory(inputHistoryBySession)
     }
 
     func navigateInputHistory(up: Bool, for sessionID: String?) -> String? {
-        guard let sessionID, var history = inputHistoryBySession[sessionID], !history.isEmpty else { return nil }
-        let currentIndex = inputHistoryIndexBySession[sessionID] ?? history.count - 1
+        guard let sessionID, let history = inputHistoryBySession[sessionID], !history.isEmpty else { return nil }
+        let currentIndex = inputHistoryIndexBySession[sessionID] ?? history.count
         if up {
-            let newIndex = max(0, currentIndex - 1)
+            // First up press goes to the last item, subsequent go further back
+            let newIndex = max(0, (currentIndex >= history.count ? history.count - 1 : currentIndex - 1))
             inputHistoryIndexBySession[sessionID] = newIndex
             return history[newIndex]
         } else {
-            // Pressing down past the last item clears the text
+            // Pressing down past the first item clears the text
             if currentIndex >= history.count - 1 {
-                inputHistoryIndexBySession[sessionID] = history.count - 1
+                inputHistoryIndexBySession[sessionID] = history.count
                 return nil
             }
             let newIndex = currentIndex + 1
             inputHistoryIndexBySession[sessionID] = newIndex
-            return newIndex < history.count ? history[newIndex] : nil
+            return history[newIndex]
         }
     }
 
