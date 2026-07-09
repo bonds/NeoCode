@@ -143,3 +143,12 @@
 - Avoid new dependencies or new tooling unless the repo already points that way.
 - Keep patches surgical, and update tests when behavior changes.
 - After changes, report the exact files touched and the narrowest verification you ran.
+
+## Release Policy
+
+- **Max one release per calendar day.** Before creating a new release, check if one or more releases already exist for today (e.g. `v0.8.1-20260709*`). If any exist:
+  1. Delete the existing GitHub release(s) and tag(s): `gh release delete <tag> --yes && git push origin :refs/tags/<tag>`.
+  2. Collect the release notes from each deleted release and combine them with the new changes.
+  3. Create the consolidated release with the combined notes.
+  4. Update the dotfiles flake.lock to point to the new consolidated commit.
+- This avoids cluttering the release history with multiple builds on the same day and keeps the flake.lock pointing to a single daily release.
