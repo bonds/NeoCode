@@ -271,7 +271,7 @@ extension AppStore {
 
         applyCachedGitState(for: projectPath)
         scheduleGitFallbackRefresh(for: projectPath)
-        scheduleGitRefresh(reason: "project-selected", projectPath: projectPath, refreshCommitPreviewIfLoaded: false, delay: .milliseconds(0))
+        scheduleGitRefresh(reason: "project-selected", projectPath: projectPath, refreshCommitPreviewIfLoaded: false, delay: .seconds(2))
     }
 
     func cancelGitRefreshLoop() {
