@@ -66,6 +66,7 @@ struct ToolCallItemCardView: View {
             Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(NeoCodeTheme.textMuted)
+                .frame(width: 12)
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {

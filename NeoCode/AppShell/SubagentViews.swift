@@ -235,8 +235,17 @@ struct SubagentTaskCardView: View {
     }
 
     private func status(for session: SessionSummary) -> SubagentStatus {
-        // Empty transcript means subagent just started — show as running
-        guard !session.transcript.isEmpty else { return .running }
+        if session.transcript.isEmpty {
+            // No transcript loaded yet — fall back to runtime status
+            switch session.status {
+            case .running, .retrying, .awaitingInput:
+                return .running
+            case .error:
+                return .error
+            case .idle:
+                return .completed
+            }
+        }
 
         let hasInProgress = session.transcript.contains(where: \.isInProgress)
         let hasToolError = session.transcript.contains { message in
