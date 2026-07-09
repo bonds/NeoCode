@@ -352,25 +352,12 @@ struct GitRepositoryService: Sendable {
     }
 
     private nonisolated static func pendingCommitStats(in projectPath: String) async throws -> (additions: Int, deletions: Int) {
-        let gitDirectoryPath = try await runGit(["rev-parse", "--absolute-git-dir"], in: projectPath)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        let gitDirectoryURL = URL(fileURLWithPath: gitDirectoryPath, isDirectory: true)
-        let liveIndexURL = gitDirectoryURL.appendingPathComponent("index", isDirectory: false)
-        let temporaryIndexURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString, isDirectory: false)
-
-        if FileManager.default.fileExists(atPath: liveIndexURL.path) {
-            try FileManager.default.copyItem(at: liveIndexURL, to: temporaryIndexURL)
-        }
-
-        defer {
-            try? FileManager.default.removeItem(at: temporaryIndexURL)
-        }
-
-        let environment = ["GIT_INDEX_FILE": temporaryIndexURL.path]
-        _ = try await runGit(["add", "-A"], in: projectPath, environment: environment)
-        let output = try await runGit(["diff", "--cached", "--numstat"], in: projectPath, environment: environment)
-        return parseNumstat(output)
+        // Compute combined stat for staged + unstaged changes without git add -A
+        async let stagedOutput = runGit(["diff", "--cached", "--numstat"], in: projectPath)
+        async let unstagedOutput = runGit(["diff", "--numstat"], in: projectPath)
+        let staged = try await parseNumstat(stagedOutput)
+        let unstaged = try await parseNumstat(unstagedOutput)
+        return (staged.additions + unstaged.additions, staged.deletions + unstaged.deletions)
     }
 
     private nonisolated static func currentBranch(in projectPath: String) async throws -> String {
