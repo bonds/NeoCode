@@ -919,7 +919,8 @@ final class AppStore {
     }
 
     func isSessionChildrenCollapsed(_ sessionID: String) -> Bool {
-        collapsedChildSessions.contains(sessionID)
+        // Sessions with children start collapsed by default
+        !collapsedChildSessions.contains(sessionID)
     }
 
     func isSessionListSyncing(for projectID: ProjectSummary.ID) -> Bool {
@@ -3142,13 +3143,6 @@ final class AppStore {
                     return SessionSummary(session: session, fallbackTitle: fallbackTitle)
                 }
             )
-
-            // Sessions with children start collapsed
-            for root in sessions where root.parentID == nil {
-                if sessions.contains(where: { $0.parentID == root.id }) {
-                    collapsedChildSessions.insert(root.id)
-                }
-            }
 
             if let selectedSessionID,
                self.projectID(for: selectedSessionID) == projectID,
