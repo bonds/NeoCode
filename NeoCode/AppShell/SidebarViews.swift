@@ -305,11 +305,6 @@ struct ProjectTreeNode: View {
         }
         .opacity(isBeingDragged ? 0.7 : 1)
         .animation(.easeOut(duration: 0.12), value: isDropTarget)
-        .task {
-            for root in rootSessions {
-                await store.syncChildSessions(for: root.id, using: runtime)
-            }
-        }
     }
 
     private var disclosureIcon: String {

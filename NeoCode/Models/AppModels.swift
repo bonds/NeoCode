@@ -56,7 +56,7 @@ struct ProjectSettings: Codable, Hashable {
     var isCollapsedInSidebar: Bool
     var preferredEditorID: String?
 
-    init(isCollapsedInSidebar: Bool = false, preferredEditorID: String? = nil) {
+    init(isCollapsedInSidebar: Bool = true, preferredEditorID: String? = nil) {
         self.isCollapsedInSidebar = isCollapsedInSidebar
         self.preferredEditorID = preferredEditorID
     }

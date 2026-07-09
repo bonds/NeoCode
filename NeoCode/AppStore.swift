@@ -3126,7 +3126,6 @@ final class AppStore {
 
         do {
             let sessions = try await service.listSessions()
-                .filter(\.isRootVisible)
                 .sorted { $0.updatedAt > $1.updatedAt }
             guard !Task.isCancelled else { return }
             replaceSessions(
