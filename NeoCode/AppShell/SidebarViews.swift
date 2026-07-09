@@ -2,6 +2,16 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
+extension OpenCodeSessionActivity {
+    var sessionStatus: SessionStatus {
+        switch self {
+        case .idle: return .idle
+        case .busy: return .running
+        case .retry: return .retrying
+        }
+    }
+}
+
 struct AppSidebarView: View {
     @Environment(AppStore.self) private var store
 
@@ -584,7 +594,14 @@ struct SessionTreeRow: View {
             return localized("failed", locale: locale)
         }
 
-        switch currentSession.status {
+        let effectiveStatus: SessionStatus
+        if let live = store.liveActivity(for: session.id) {
+            effectiveStatus = live.sessionStatus
+        } else {
+            effectiveStatus = currentSession.status
+        }
+
+        switch effectiveStatus {
         case .idle:
             return nil
         case .running:
@@ -607,7 +624,14 @@ struct SessionTreeRow: View {
             return .warning
         }
 
-        switch currentSession.status {
+        let effectiveStatus: SessionStatus
+        if let live = store.liveActivity(for: session.id) {
+            effectiveStatus = live.sessionStatus
+        } else {
+            effectiveStatus = currentSession.status
+        }
+
+        switch effectiveStatus {
         case .idle, .running:
             return .accent
         case .awaitingInput, .retrying, .error:

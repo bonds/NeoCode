@@ -482,9 +482,13 @@ final class AppStore {
     var selectedSessionActivity: OpenCodeSessionActivity? {
         let _ = sessionUIRevision
         guard let selectedSessionID else { return nil }
-        return effectiveLiveSessionActivity(
-            for: selectedSessionID,
-            transcript: transcript(for: selectedSessionID)
+        return liveActivity(for: selectedSessionID)
+    }
+
+    func liveActivity(for sessionID: String) -> OpenCodeSessionActivity? {
+        effectiveLiveSessionActivity(
+            for: sessionID,
+            transcript: transcript(for: sessionID)
         )
     }
 
