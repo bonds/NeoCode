@@ -2262,7 +2262,11 @@ final class AppStore {
                 let fallbackTitle = sessionSummary(for: session.id, projectID: projectID)?.title ?? SessionSummary.defaultTitle
                 upsert(session: SessionSummary(session: session, fallbackTitle: fallbackTitle), in: projectID, preferTopInsertion: event.isCreated)
             } else if session.parentID != nil {
-                upsert(session: SessionSummary(session: session), in: projectID, preferTopInsertion: event.isCreated)
+                // Child session (subagent) — store silently without expensive upsert pipeline
+                if let projectIndex = projects.firstIndex(where: { $0.id == projectID }),
+                   !projects[projectIndex].sessions.contains(where: { $0.id == session.id }) {
+                    projects[projectIndex].sessions.insert(SessionSummary(session: session), at: 0)
+                }
             } else {
                 removeSession(session.id, in: projectID)
             }
@@ -3136,6 +3140,7 @@ final class AppStore {
 
         do {
             let sessions = try await service.listSessions()
+                .filter(\.isRootVisible)
                 .sorted { $0.updatedAt > $1.updatedAt }
             guard !Task.isCancelled else { return }
             replaceSessions(
