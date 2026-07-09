@@ -177,6 +177,12 @@ struct ComposerView: View {
                     onNavigateHistory: { up in
                         store.navigateInputHistory(up: up, for: store.selectedSessionID)
                     },
+                    onSaveInputDraft: { text in
+                        store.saveInputDraft(text, for: store.selectedSessionID)
+                    },
+                    onPopInputDraft: {
+                        store.popInputDraft(for: store.selectedSessionID)
+                    },
                     allowsEmptyPrimaryAction: isStopMode,
                     hasAttachments: !store.attachedFiles.isEmpty,
                     onImportAttachments: importAttachments
@@ -989,6 +995,8 @@ struct GrowingTextView: NSViewRepresentable {
     let onMoveAuxiliarySelection: (Int) -> Bool
     let onCancelAuxiliaryUI: () -> Bool
     let onNavigateHistory: (Bool) -> String?
+    let onSaveInputDraft: (String) -> Void
+    let onPopInputDraft: () -> String?
     let allowsEmptyPrimaryAction: Bool
     let hasAttachments: Bool
     let onImportAttachments: ([ComposerAttachmentImportItem]) -> Void
@@ -1122,6 +1130,10 @@ struct GrowingTextView: NSViewRepresentable {
         func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
             if commandSelector == #selector(NSResponder.moveUp(_:)) {
                 if parent.onMoveAuxiliarySelection(-1) { return true }
+                if parent.onNavigateHistory(true) != nil {
+                    // First history up-press: save the current text as draft
+                    parent.onSaveInputDraft(textView.string)
+                }
                 if let historyText = parent.onNavigateHistory(true) {
                     applyHistoryText(historyText, to: textView)
                     return true
@@ -1133,6 +1145,8 @@ struct GrowingTextView: NSViewRepresentable {
                 if parent.onMoveAuxiliarySelection(1) { return true }
                 if let historyText = parent.onNavigateHistory(false) {
                     applyHistoryText(historyText, to: textView)
+                } else if let draft = parent.onPopInputDraft() {
+                    applyHistoryText(draft, to: textView)
                 } else {
                     applyHistoryText("", to: textView)
                 }

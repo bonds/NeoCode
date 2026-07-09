@@ -230,6 +230,7 @@ final class AppStore {
     private var collapsedChildSessions: Set<String> = []
     private var inputHistoryBySession: [String: [String]] = [:]
     private var inputHistoryIndexBySession: [String: Int] = [:]
+    private var savedDraftBySession: [String: String] = [:]
     private var favoriteModelIDs: Set<String> = []
     private var isApplyingSessionComposerState = false
     private var autoRespondedPermissionIDs: [String: Date] = [:]
@@ -5349,12 +5350,11 @@ final class AppStore {
         guard let sessionID, let history = inputHistoryBySession[sessionID], !history.isEmpty else { return nil }
         let currentIndex = inputHistoryIndexBySession[sessionID] ?? history.count
         if up {
-            // First up press goes to the last item, subsequent go further back
             let newIndex = max(0, (currentIndex >= history.count ? history.count - 1 : currentIndex - 1))
             inputHistoryIndexBySession[sessionID] = newIndex
             return history[newIndex]
         } else {
-            // Pressing down past the first item clears the text
+            // Pressing down past the last item restores the saved draft
             if currentIndex >= history.count - 1 {
                 inputHistoryIndexBySession[sessionID] = history.count
                 return nil
@@ -5363,6 +5363,18 @@ final class AppStore {
             inputHistoryIndexBySession[sessionID] = newIndex
             return history[newIndex]
         }
+    }
+
+    func saveInputDraft(_ text: String, for sessionID: String?) {
+        guard let sessionID else { return }
+        savedDraftBySession[sessionID] = text
+    }
+
+    func popInputDraft(for sessionID: String?) -> String? {
+        guard let sessionID else { return nil }
+        let draft = savedDraftBySession[sessionID]
+        savedDraftBySession.removeValue(forKey: sessionID)
+        return draft
     }
 
     private func isSessionActivelyResponding(_ sessionID: String) -> Bool {
