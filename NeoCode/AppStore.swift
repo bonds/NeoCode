@@ -3132,11 +3132,9 @@ final class AppStore {
         let keepsCurrentUI = allowCachedFallback && (hasCachedSessions(in: projectID) || selectedSession?.isEphemeral == true)
 
         do {
-            let allSessions = try await service.listSessions()
+            let sessions = try await service.listSessions()
                 .sorted { $0.updatedAt > $1.updatedAt }
             guard !Task.isCancelled else { return }
-
-            let sessions = allSessions.filter(\.isRootVisible)
             replaceSessions(
                 in: projectID,
                 with: sessions.map { session in
@@ -3145,20 +3143,10 @@ final class AppStore {
                 }
             )
 
-            // Silently store child sessions after replaceSessions (which clears the array)
-            if let projectIndex = projects.firstIndex(where: { $0.id == projectID }) {
-                var stored = 0
-                for remote in allSessions where remote.parentID != nil {
-                    guard !projects[projectIndex].sessions.contains(where: { $0.id == remote.id })
-                    else { continue }
-                    projects[projectIndex].sessions.insert(SessionSummary(session: remote), at: stored)
-                    stored += 1
-                }
-                // Sessions with children start collapsed
-                for root in allSessions where root.parentID == nil {
-                    if allSessions.contains(where: { $0.parentID == root.id }) {
-                        collapsedChildSessions.insert(root.id)
-                    }
+            // Sessions with children start collapsed
+            for root in sessions where root.parentID == nil {
+                if sessions.contains(where: { $0.parentID == root.id }) {
+                    collapsedChildSessions.insert(root.id)
                 }
             }
 
