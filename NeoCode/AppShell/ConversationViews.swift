@@ -914,16 +914,17 @@ struct ConversationView: View {
         isMaintainingPinnedPosition = false
         isAwaitingInitialScroll = true
         lastObservedTranscriptContentOffsetY = nil
-        isLoadingOlderMessages = false
+        resetLoadedMessageWindow()
 
         if shouldShowTranscriptLoadingState {
             return
         }
 
         if transcriptCount > 0 {
-            // Load all messages initially so scroll-to-bottom works on the first render
-            loadedMessageCount = transcriptCount
-            completeInitialScroll(using: proxy)
+            // Scroll on next tick so the view lays out at the new loadedMessageCount first
+            DispatchQueue.main.async {
+                self.completeInitialScroll(using: proxy)
+            }
         } else {
             finishInitialPresentation()
         }
