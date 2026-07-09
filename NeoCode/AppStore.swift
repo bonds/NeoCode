@@ -3946,11 +3946,24 @@ final class AppStore {
         if let messageIndex = transcript.firstIndex(where: { $0.id == message.id }) {
             transcript[messageIndex] = message
         } else {
-            // Insert in timestamp order to keep messages sorted even when
-            // SSE events arrive out of order (e.g. thinking after response)
-            let insertIndex = transcript.firstIndex(where: { $0.timestamp > message.timestamp })
-                ?? transcript.endIndex
-            transcript.insert(message, at: insertIndex)
+            if message.emphasis != .strong,
+               let lastMessage = transcript.last,
+               lastMessage.messageID == message.messageID,
+               lastMessage.emphasis == .strong,
+               lastMessage.isInProgress
+            {
+                // Response arrived while thinking is still in progress — insert right after thinking
+                transcript.insert(message, at: transcript.endIndex)
+            } else if message.emphasis == .strong,
+                      let lastMessage = transcript.last,
+                      lastMessage.messageID == message.messageID,
+                      lastMessage.emphasis != .strong
+            {
+                // Thinking arrived after its response — insert right before the response
+                transcript.insert(message, at: transcript.count - 1)
+            } else {
+                transcript.append(message)
+            }
         }
         setTranscript(transcript, for: sessionID)
         projects[indices.project].sessions[indices.session].lastUpdatedAt = message.timestamp
@@ -5748,10 +5761,23 @@ final class AppStore {
                     kind: .plain,
                     isInProgress: true
                 )
-                // Insert in timestamp order
-                let insertIndex = transcript.firstIndex(where: { $0.timestamp > buffered.updatedAt })
-                    ?? transcript.endIndex
-                transcript.insert(placeholder, at: insertIndex)
+                // Insert after same-messageID thinking block, or before same-messageID response
+                if placeholder.emphasis != .strong,
+                   let lastMsg = transcript.last,
+                   lastMsg.messageID == placeholder.messageID,
+                   lastMsg.emphasis == .strong,
+                   lastMsg.isInProgress
+                {
+                    transcript.insert(placeholder, at: transcript.endIndex)
+                } else if placeholder.emphasis == .strong,
+                          let lastMsg = transcript.last,
+                          lastMsg.messageID == placeholder.messageID,
+                          lastMsg.emphasis != .strong
+                {
+                    transcript.insert(placeholder, at: transcript.count - 1)
+                } else {
+                    transcript.append(placeholder)
+                }
                 messageIndex = transcript.firstIndex(where: { $0.id == key.partID })
                     ?? (transcript.endIndex - 1)
             }
