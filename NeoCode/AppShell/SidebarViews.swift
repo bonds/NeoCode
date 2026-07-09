@@ -209,7 +209,6 @@ struct ProjectTreeNode: View {
     @Environment(OpenCodeRuntime.self) private var runtime
     @Environment(\.locale) private var locale
     @State private var isHovering = false
-    @State private var showsAllSessions = false
 
     private let workspaceToolService = WorkspaceToolService()
 
@@ -218,7 +217,7 @@ struct ProjectTreeNode: View {
     var isBeingDragged = false
 
     var body: some View {
-        let rootSessions = project.displayedSessions(showAll: showsAllSessions)
+        let rootSessions = project.displayedSessions()
         let hasChildrenBySession: [String: Bool] = Dictionary(
             uniqueKeysWithValues: rootSessions.lazy.map {
                 ($0.id, !project.childSessions(for: $0.id).isEmpty)
@@ -279,17 +278,6 @@ struct ProjectTreeNode: View {
                                     }
                             }
                         }
-                    }
-
-                    if project.hasHiddenSessions {
-                        Button(action: toggleSessionExpansion) {
-                            Text(sessionExpansionLabel)
-                                .font(.neoMonoSmall)
-                                .foregroundStyle(NeoCodeTheme.accent)
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 7)
                     }
                 }
             }
@@ -375,22 +363,6 @@ struct ProjectTreeNode: View {
 
     private func toggleCollapsed() {
         store.toggleProjectCollapsed(project.id)
-    }
-
-    private func toggleSessionExpansion() {
-        withAnimation(.easeInOut(duration: 0.16)) {
-            showsAllSessions.toggle()
-        }
-    }
-
-    private var sessionExpansionLabel: String {
-        if showsAllSessions {
-            return localized("Show less", locale: locale)
-        }
-
-        let countText = String(project.hiddenSessionCount)
-        let format = localized("Show %@ more", locale: locale)
-        return String(format: format, countText)
     }
 
     private var shouldShowSessionSyncIndicator: Bool {

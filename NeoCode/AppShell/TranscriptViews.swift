@@ -397,6 +397,7 @@ struct CompactionSummarySectionView: View {
             Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(NeoCodeTheme.textMuted)
+                .frame(width: 12)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(localized("Compaction summary", locale: locale))

@@ -235,6 +235,9 @@ struct SubagentTaskCardView: View {
     }
 
     private func status(for session: SessionSummary) -> SubagentStatus {
+        // Empty transcript means subagent just started — show as running
+        guard !session.transcript.isEmpty else { return .running }
+
         let hasInProgress = session.transcript.contains(where: \.isInProgress)
         let hasToolError = session.transcript.contains { message in
             if case .toolCall(let toolCall) = message.kind,
@@ -291,6 +294,8 @@ struct SubagentTaskCardView: View {
 
     private func elapsedSince(_ date: Date) -> String {
         let interval = abs(date.timeIntervalSinceNow)
+        // Clamp insane values (uninitialized / distantPast)
+        guard interval < 86400 * 365 else { return localized("Just now", locale: locale) }
         switch interval {
         case 0..<60: return localized("Just now", locale: locale)
         case 60..<120: return localized("1m ago", locale: locale)

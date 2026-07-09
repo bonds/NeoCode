@@ -219,6 +219,7 @@ final class AppStore {
     private var messageRoles: [String: ChatMessage.Role] = [:]
     private var messageInfosBySessionID: [String: [String: OpenCodeMessageInfo]] = [:]
     private var liveSessionStatuses: [String: OpenCodeSessionActivity] = [:]
+    private var lastBusyAt: [String: Date] = [:]
     private var pendingPermissionsBySession: [String: [OpenCodePermissionRequest]] = [:]
     private var pendingQuestionsBySession: [String: [OpenCodeQuestionRequest]] = [:]
     private var promptDraftsByKey: [String: String] = [:]
@@ -227,6 +228,8 @@ final class AppStore {
     private var promptPersistTask: Task<Void, Never>?
     private var yoloSessionKeys: Set<String>
     private var collapsedChildSessions: Set<String> = []
+    private var inputHistoryBySession: [String: [String]] = [:]
+    private var inputHistoryIndexBySession: [String: Int] = [:]
     private var favoriteModelIDs: Set<String> = []
     private var isApplyingSessionComposerState = false
     private var autoRespondedPermissionIDs: [String: Date] = [:]
@@ -2276,6 +2279,9 @@ final class AppStore {
         case .sessionStatusChanged(let sessionID, let status):
             let previousStatus = liveSessionStatuses[sessionID]
             liveSessionStatuses[sessionID] = status
+            if case .busy = status {
+                lastBusyAt[sessionID] = .now
+            }
             if case .idle = status {
                 settleSessionActivity(sessionID: sessionID, projectID: projectID)
             }
@@ -4127,6 +4133,13 @@ final class AppStore {
         let isAwaitingFirstAssistantUpdate = transcript.isEmpty || transcript.last?.role == .user
         let isAwaitingInput = pendingPermission(for: sessionID) != nil || pendingQuestion(for: sessionID) != nil
 
+        // 5-second cooldown: show as busy if we were busy recently
+        if case .idle = activity,
+           let lastBusy = lastBusyAt[sessionID],
+           Date().timeIntervalSince(lastBusy) < 5 {
+            return .busy
+        }
+
         switch activity {
         case .idle:
             if hasLocalActivity {
@@ -5308,6 +5321,30 @@ final class AppStore {
 
     private func isSessionLocallyActive(_ sessionID: String) -> Bool {
         locallyActiveSessionIDs.contains(sessionID)
+    }
+
+    // MARK: - Input history
+
+    func pushInputHistory(_ text: String, for sessionID: String?) {
+        guard let sessionID, !text.isEmpty else { return }
+        if inputHistoryBySession[sessionID]?.last != text {
+            inputHistoryBySession[sessionID, default: []].append(text)
+        }
+        inputHistoryIndexBySession[sessionID] = (inputHistoryBySession[sessionID]?.count ?? 1) - 1
+    }
+
+    func navigateInputHistory(up: Bool, for sessionID: String?) -> String? {
+        guard let sessionID, var history = inputHistoryBySession[sessionID], !history.isEmpty else { return nil }
+        let currentIndex = inputHistoryIndexBySession[sessionID] ?? history.count - 1
+        if up {
+            let newIndex = max(0, currentIndex - 1)
+            inputHistoryIndexBySession[sessionID] = newIndex
+            return history[newIndex]
+        } else {
+            let newIndex = min(history.count - 1, currentIndex + 1)
+            inputHistoryIndexBySession[sessionID] = newIndex
+            return history[newIndex]
+        }
     }
 
     private func isSessionActivelyResponding(_ sessionID: String) -> Bool {

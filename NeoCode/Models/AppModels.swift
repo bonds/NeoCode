@@ -1,7 +1,6 @@
 import Foundation
 
 struct ProjectSummary: Codable, Identifiable, Hashable {
-    static let displayedSessionLimit = 8
 
     let id: UUID
     var name: String
@@ -27,7 +26,7 @@ struct ProjectSummary: Codable, Identifiable, Hashable {
     }
 
     func displayedSessions(showAll: Bool = false) -> [SessionSummary] {
-        let orderedSessions = sessions
+        sessions
             .filter { $0.parentID == nil }
             .enumerated()
             .sorted { lhs, rhs in
@@ -38,17 +37,6 @@ struct ProjectSummary: Codable, Identifiable, Hashable {
                 return lhs.offset < rhs.offset
             }
             .map(\.element)
-
-        guard !showAll else { return orderedSessions }
-        return Array(orderedSessions.prefix(Self.displayedSessionLimit))
-    }
-
-    var hiddenSessionCount: Int {
-        max(0, sessions.filter { $0.parentID == nil }.count - Self.displayedSessionLimit)
-    }
-
-    var hasHiddenSessions: Bool {
-        hiddenSessionCount > 0
     }
 }
 

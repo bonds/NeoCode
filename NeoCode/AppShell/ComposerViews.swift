@@ -174,6 +174,9 @@ struct ComposerView: View {
                     onConfirmAuxiliarySelection: onConfirmAuxiliarySelection,
                     onMoveAuxiliarySelection: onMoveAuxiliarySelection,
                     onCancelAuxiliaryUI: onCancelAuxiliaryUI,
+                    onNavigateHistory: { up in
+                        store.navigateInputHistory(up: up, for: store.selectedSessionID)
+                    },
                     allowsEmptyPrimaryAction: isStopMode,
                     hasAttachments: !store.attachedFiles.isEmpty,
                     onImportAttachments: importAttachments
@@ -410,6 +413,7 @@ struct ComposerView: View {
 
         if !isStopMode {
             textViewHeight = ComposerLayout.minimumTextViewHeight
+            store.pushInputHistory(text, for: store.selectedSessionID)
         }
 
         primaryAction()
@@ -984,6 +988,7 @@ struct GrowingTextView: NSViewRepresentable {
     let onConfirmAuxiliarySelection: () -> Bool
     let onMoveAuxiliarySelection: (Int) -> Bool
     let onCancelAuxiliaryUI: () -> Bool
+    let onNavigateHistory: (Bool) -> String?
     let allowsEmptyPrimaryAction: Bool
     let hasAttachments: Bool
     let onImportAttachments: ([ComposerAttachmentImportItem]) -> Void
@@ -1116,11 +1121,21 @@ struct GrowingTextView: NSViewRepresentable {
 
         func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
             if commandSelector == #selector(NSResponder.moveUp(_:)) {
-                return parent.onMoveAuxiliarySelection(-1)
+                if parent.onMoveAuxiliarySelection(-1) { return true }
+                if let historyText = parent.onNavigateHistory(true) {
+                    textView.string = historyText
+                    return true
+                }
+                return false
             }
 
             if commandSelector == #selector(NSResponder.moveDown(_:)) {
-                return parent.onMoveAuxiliarySelection(1)
+                if parent.onMoveAuxiliarySelection(1) { return true }
+                if let historyText = parent.onNavigateHistory(false) {
+                    textView.string = historyText
+                    return true
+                }
+                return false
             }
 
             if commandSelector == #selector(NSResponder.insertTab(_:)) {
