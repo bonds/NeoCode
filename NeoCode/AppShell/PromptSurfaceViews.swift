@@ -405,14 +405,19 @@ private struct QuestionPromptSurfaceView: View {
                 }
             }
 
-            if !isSingleQuestion {
-                questionTabs
-            }
+            ScrollView([.vertical]) {
+                VStack(alignment: .leading, spacing: 14) {
+                    if !isSingleQuestion {
+                        questionTabs
+                    }
 
-            if isConfirmStep {
-                questionReview
-            } else if let activeQuestion, let activeQuestionIndex {
-                questionStep(for: activeQuestionIndex, question: activeQuestion)
+                    if isConfirmStep {
+                        questionReview
+                    } else if let activeQuestion, let activeQuestionIndex {
+                        questionStep(for: activeQuestionIndex, question: activeQuestion)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             HStack(spacing: 10) {

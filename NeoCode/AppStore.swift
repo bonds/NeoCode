@@ -905,7 +905,7 @@ final class AppStore {
     }
 
     func isProjectCollapsed(_ projectID: ProjectSummary.ID) -> Bool {
-        projects.first(where: { $0.id == projectID })?.settings.isCollapsedInSidebar ?? false
+        projects.first(where: { $0.id == projectID })?.settings.isCollapsedInSidebar ?? true
     }
 
     func toggleSessionChildrenCollapsed(_ sessionID: String) {
