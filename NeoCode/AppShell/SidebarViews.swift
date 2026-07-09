@@ -218,6 +218,13 @@ struct ProjectTreeNode: View {
     var isBeingDragged = false
 
     var body: some View {
+        let rootSessions = project.displayedSessions(showAll: showsAllSessions)
+        let hasChildrenBySession: [String: Bool] = Dictionary(
+            uniqueKeysWithValues: rootSessions.lazy.map {
+                ($0.id, !project.childSessions(for: $0.id).isEmpty)
+            }
+        )
+
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 8) {
                 Button(action: toggleCollapsed) {
@@ -254,12 +261,12 @@ struct ProjectTreeNode: View {
                         ProjectSessionSyncRow()
                     }
 
-                    ForEach(project.displayedSessions(showAll: showsAllSessions)) { root in
+                    ForEach(rootSessions) { root in
                         let children = project.childSessions(for: root.id)
                         let isRootSelected = store.selectedSessionID == root.id
                         let isAnyChildSelected = children.contains(where: { $0.id == store.selectedSessionID })
 
-                        SessionTreeRow(session: root, isSelected: isRootSelected || isAnyChildSelected, hasChildren: !children.isEmpty)
+                        SessionTreeRow(session: root, isSelected: isRootSelected || isAnyChildSelected, hasChildren: hasChildrenBySession[root.id, default: false])
                             .onTapGesture {
                                 store.selectSession(root.id)
                             }
@@ -298,6 +305,11 @@ struct ProjectTreeNode: View {
         }
         .opacity(isBeingDragged ? 0.7 : 1)
         .animation(.easeOut(duration: 0.12), value: isDropTarget)
+        .task {
+            for root in rootSessions {
+                await store.syncChildSessions(for: root.id, using: runtime)
+            }
+        }
     }
 
     private var disclosureIcon: String {

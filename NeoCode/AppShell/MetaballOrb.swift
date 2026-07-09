@@ -29,7 +29,7 @@ struct MetaballOrb: View {
         animated: Bool = true,
         renderScale: CGFloat = 1.12,
         internalResolutionScale: CGFloat = 1.2,
-        animationInterval: TimeInterval = 1.0 / 24.0,
+        animationInterval: TimeInterval = 1.0 / 8.0,
         intensity: CGFloat = 0,
         pulse: CGFloat = 0,
         warmth: CGFloat = 0,
@@ -155,7 +155,7 @@ struct DraftReactiveMetaballOrb: View {
         text: String,
         renderScale: CGFloat = 1.12,
         internalResolutionScale: CGFloat = 1.2,
-        animationInterval: TimeInterval = 1.0 / 24.0
+        animationInterval: TimeInterval = 1.0 / 8.0
     ) {
         self.size = size
         self.text = text
