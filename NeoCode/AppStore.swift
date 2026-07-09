@@ -2252,6 +2252,8 @@ final class AppStore {
             if session.isRootVisible {
                 let fallbackTitle = sessionSummary(for: session.id, projectID: projectID)?.title ?? SessionSummary.defaultTitle
                 upsert(session: SessionSummary(session: session, fallbackTitle: fallbackTitle), in: projectID, preferTopInsertion: event.isCreated)
+            } else if session.parentID != nil {
+                upsert(session: SessionSummary(session: session), in: projectID, preferTopInsertion: event.isCreated)
             } else {
                 removeSession(session.id, in: projectID)
             }
