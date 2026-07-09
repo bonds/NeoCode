@@ -211,6 +211,23 @@ struct PersistedFavoriteModelsStore {
     }
 }
 
+struct PersistedInputHistoryStore {
+    private let defaults = UserDefaults.standard
+    private let key = "tech.watzon.NeoCode.inputHistory"
+
+    func loadInputHistory() -> [String: [String]] {
+        guard let data = defaults.data(forKey: key),
+              let history = try? JSONDecoder().decode([String: [String]].self, from: data)
+        else { return [:] }
+        return history
+    }
+
+    func saveInputHistory(_ history: [String: [String]]) {
+        guard let data = try? JSONEncoder().encode(history) else { return }
+        defaults.set(data, forKey: key)
+    }
+}
+
 struct PersistedProject: Codable {
     let id: UUID
     let name: String

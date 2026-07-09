@@ -282,6 +282,7 @@ final class AppStore {
             ? persistence.yoloPreferences.loadYoloSessionKeys()
             : []
         self.favoriteModelIDs = persistence.favoriteModels.loadFavoriteModelIDs()
+        self.inputHistoryBySession = persistence.inputHistory.loadInputHistory()
         self.performanceOptions = AppStorePerformanceOptions()
         self.isPersistenceEnabled = true
         self.lastWorkspaceSelection = initialWorkspaceSelection.content
@@ -321,6 +322,7 @@ final class AppStore {
             ? persistence.yoloPreferences.loadYoloSessionKeys()
             : []
         self.favoriteModelIDs = isPersistenceEnabled ? persistence.favoriteModels.loadFavoriteModelIDs() : []
+        self.inputHistoryBySession = isPersistenceEnabled ? persistence.inputHistory.loadInputHistory() : [:]
         self.performanceOptions = performanceOptions
         self.isPersistenceEnabled = isPersistenceEnabled
         self.lastWorkspaceSelection = initialWorkspaceSelection.content
@@ -5335,6 +5337,7 @@ final class AppStore {
             inputHistoryBySession[sessionID, default: []].append(text)
         }
         inputHistoryIndexBySession[sessionID] = (inputHistoryBySession[sessionID]?.count ?? 1) - 1
+        persistence.inputHistory.saveInputHistory(inputHistoryBySession)
     }
 
     func navigateInputHistory(up: Bool, for sessionID: String?) -> String? {

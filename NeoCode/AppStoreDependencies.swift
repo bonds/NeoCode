@@ -45,6 +45,7 @@ struct AppStorePersistence {
     let promptDrafts: PersistedPromptDraftsStore
     let yoloPreferences: PersistedYoloPreferencesStore
     let favoriteModels: PersistedFavoriteModelsStore
+    let inputHistory: PersistedInputHistoryStore
 
     init(
         projects: PersistedProjectsStore = PersistedProjectsStore(),
@@ -52,7 +53,8 @@ struct AppStorePersistence {
         workspaceSelection: PersistedWorkspaceSelectionStore = PersistedWorkspaceSelectionStore(),
         promptDrafts: PersistedPromptDraftsStore = PersistedPromptDraftsStore(),
         yoloPreferences: PersistedYoloPreferencesStore = PersistedYoloPreferencesStore(),
-        favoriteModels: PersistedFavoriteModelsStore = PersistedFavoriteModelsStore()
+        favoriteModels: PersistedFavoriteModelsStore = PersistedFavoriteModelsStore(),
+        inputHistory: PersistedInputHistoryStore = PersistedInputHistoryStore()
     ) {
         self.projects = projects
         self.appSettings = appSettings
@@ -60,6 +62,7 @@ struct AppStorePersistence {
         self.promptDrafts = promptDrafts
         self.yoloPreferences = yoloPreferences
         self.favoriteModels = favoriteModels
+        self.inputHistory = inputHistory
     }
 }
 
