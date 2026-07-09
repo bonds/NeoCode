@@ -219,7 +219,6 @@ final class AppStore {
     private var messageRoles: [String: ChatMessage.Role] = [:]
     private var messageInfosBySessionID: [String: [String: OpenCodeMessageInfo]] = [:]
     private var liveSessionStatuses: [String: OpenCodeSessionActivity] = [:]
-    private var activeCooldownTasks: [String: Task<Void, Never>] = [:]
     private var pendingPermissionsBySession: [String: [OpenCodePermissionRequest]] = [:]
     private var pendingQuestionsBySession: [String: [OpenCodeQuestionRequest]] = [:]
     private var promptDraftsByKey: [String: String] = [:]
@@ -2268,23 +2267,7 @@ final class AppStore {
             }
         case .sessionStatusChanged(let sessionID, let status):
             let previousStatus = liveSessionStatuses[sessionID]
-
-            if case .busy = status {
-                activeCooldownTasks[sessionID]?.cancel()
-                activeCooldownTasks.removeValue(forKey: sessionID)
-                liveSessionStatuses[sessionID] = status
-            } else if case .idle = status {
-                activeCooldownTasks[sessionID]?.cancel()
-                let task = Task { [weak self] in
-                    try? await Task.sleep(for: .seconds(5))
-                    guard let self, !Task.isCancelled else { return }
-                    liveSessionStatuses[sessionID] = .idle
-                    activeCooldownTasks.removeValue(forKey: sessionID)
-                }
-                activeCooldownTasks[sessionID] = task
-            } else {
-                liveSessionStatuses[sessionID] = status
-            }
+            liveSessionStatuses[sessionID] = status
             if case .idle = status {
                 settleSessionActivity(sessionID: sessionID, projectID: projectID)
             }
