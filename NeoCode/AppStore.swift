@@ -4133,10 +4133,10 @@ final class AppStore {
         let isAwaitingFirstAssistantUpdate = transcript.isEmpty || transcript.last?.role == .user
         let isAwaitingInput = pendingPermission(for: sessionID) != nil || pendingQuestion(for: sessionID) != nil
 
-        // 5-second cooldown: show as busy if we were busy recently
+        // 10-second cooldown: show as busy if we were busy recently
         if case .idle = activity,
            let lastBusy = lastBusyAt[sessionID],
-           Date().timeIntervalSince(lastBusy) < 5 {
+           Date().timeIntervalSince(lastBusy) < 10 {
             return .busy
         }
 
