@@ -1124,6 +1124,9 @@ struct GrowingTextView: NSViewRepresentable {
                 if parent.onMoveAuxiliarySelection(-1) { return true }
                 if let historyText = parent.onNavigateHistory(true) {
                     textView.string = historyText
+                    if let ct = textView as? ComposerNSTextView {
+                        ct.updatePlaceholderVisibility()
+                    }
                     return true
                 }
                 return false
@@ -1133,9 +1136,13 @@ struct GrowingTextView: NSViewRepresentable {
                 if parent.onMoveAuxiliarySelection(1) { return true }
                 if let historyText = parent.onNavigateHistory(false) {
                     textView.string = historyText
-                    return true
+                } else {
+                    textView.string = ""
                 }
-                return false
+                if let ct = textView as? ComposerNSTextView {
+                    ct.updatePlaceholderVisibility()
+                }
+                return true
             }
 
             if commandSelector == #selector(NSResponder.insertTab(_:)) {

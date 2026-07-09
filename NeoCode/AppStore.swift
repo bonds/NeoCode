@@ -5352,9 +5352,14 @@ final class AppStore {
             inputHistoryIndexBySession[sessionID] = newIndex
             return history[newIndex]
         } else {
-            let newIndex = min(history.count - 1, currentIndex + 1)
+            // Pressing down past the last item clears the text
+            if currentIndex >= history.count - 1 {
+                inputHistoryIndexBySession[sessionID] = history.count - 1
+                return nil
+            }
+            let newIndex = currentIndex + 1
             inputHistoryIndexBySession[sessionID] = newIndex
-            return history[newIndex]
+            return newIndex < history.count ? history[newIndex] : nil
         }
     }
 
