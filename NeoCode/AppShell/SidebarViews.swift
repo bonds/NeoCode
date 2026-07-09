@@ -305,12 +305,6 @@ struct ProjectTreeNode: View {
         }
         .opacity(isBeingDragged ? 0.7 : 1)
         .animation(.easeOut(duration: 0.12), value: isDropTarget)
-        .task(id: project.id) {
-            // One-shot sync for child sessions so chevrons show even when collapsed
-            for root in rootSessions where !hasChildrenBySession[root.id, default: false] {
-                await store.syncChildSessions(for: root.id, using: runtime)
-            }
-        }
     }
 
     private var disclosureIcon: String {

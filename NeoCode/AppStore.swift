@@ -227,8 +227,6 @@ final class AppStore {
     private var promptPersistTask: Task<Void, Never>?
     private var yoloSessionKeys: Set<String>
     private var collapsedChildSessions: Set<String> = []
-    /// Projects that should be collapsed on this launch. Repopulated on each restart.
-    private var projectsCollapsedOnLaunch = Set<ProjectSummary.ID>()
     private var favoriteModelIDs: Set<String> = []
     private var isApplyingSessionComposerState = false
     private var autoRespondedPermissionIDs: [String: Date] = [:]
@@ -271,7 +269,6 @@ final class AppStore {
         self.persistence = persistence
         self.services = services
         self.projects = extractedState.projects
-        self.projectsCollapsedOnLaunch = Set(extractedState.projects.map(\.id))
         self.transcriptStateBySessionID = extractedState.transcripts
         self.selectedProjectID = initialWorkspaceSelection.projectID
         self.selectedContent = initialWorkspaceSelection.content
@@ -311,7 +308,6 @@ final class AppStore {
         self.persistence = persistence
         self.services = services
         self.projects = extractedState.projects
-        self.projectsCollapsedOnLaunch = Set(extractedState.projects.map(\.id))
         self.transcriptStateBySessionID = extractedState.transcripts
         self.selectedProjectID = initialWorkspaceSelection.projectID
         self.selectedContent = initialWorkspaceSelection.content
@@ -838,7 +834,10 @@ final class AppStore {
         guard let service = await connectProject(projectID, using: runtime, includeComposerOptions: false) else { return }
         let remoteSessions = (try? await service.listSessions()) ?? []
         for remote in remoteSessions where remote.parentID == parentSessionID {
-            upsert(session: SessionSummary(session: remote), in: projectID, preferTopInsertion: true)
+            guard let projectIndex = projects.firstIndex(where: { $0.id == projectID }),
+                  !projects[projectIndex].sessions.contains(where: { $0.id == remote.id })
+            else { continue }
+            projects[projectIndex].sessions.insert(SessionSummary(session: remote), at: 0)
         }
         reevaluateRuntimeRetention(using: runtime)
     }
@@ -908,13 +907,7 @@ final class AppStore {
     }
 
     func isProjectCollapsed(_ projectID: ProjectSummary.ID) -> Bool {
-        if projectsCollapsedOnLaunch.contains(projectID) {
-            projectsCollapsedOnLaunch.remove(projectID)
-            if let idx = projects.firstIndex(where: { $0.id == projectID }) {
-                projects[idx].settings.isCollapsedInSidebar = true
-            }
-        }
-        return projects.first(where: { $0.id == projectID })?.settings.isCollapsedInSidebar ?? true
+        projects.first(where: { $0.id == projectID })?.settings.isCollapsedInSidebar ?? true
     }
 
     func toggleSessionChildrenCollapsed(_ sessionID: String) {
@@ -3139,10 +3132,20 @@ final class AppStore {
         let keepsCurrentUI = allowCachedFallback && (hasCachedSessions(in: projectID) || selectedSession?.isEphemeral == true)
 
         do {
-            let sessions = try await service.listSessions()
-                .filter(\.isRootVisible)
+            let allSessions = try await service.listSessions()
                 .sorted { $0.updatedAt > $1.updatedAt }
             guard !Task.isCancelled else { return }
+
+            // Silently store child sessions (no upsert pipeline)
+            if let projectIndex = projects.firstIndex(where: { $0.id == projectID }) {
+                for remote in allSessions where remote.parentID != nil {
+                    guard !projects[projectIndex].sessions.contains(where: { $0.id == remote.id })
+                    else { continue }
+                    projects[projectIndex].sessions.insert(SessionSummary(session: remote), at: 0)
+                }
+            }
+
+            let sessions = allSessions.filter(\.isRootVisible)
             replaceSessions(
                 in: projectID,
                 with: sessions.map { session in
