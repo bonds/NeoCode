@@ -914,13 +914,15 @@ struct ConversationView: View {
         isMaintainingPinnedPosition = false
         isAwaitingInitialScroll = true
         lastObservedTranscriptContentOffsetY = nil
-        resetLoadedMessageWindow()
+        isLoadingOlderMessages = false
 
         if shouldShowTranscriptLoadingState {
             return
         }
 
         if transcriptCount > 0 {
+            // Load all messages initially so scroll-to-bottom works on the first render
+            loadedMessageCount = transcriptCount
             completeInitialScroll(using: proxy)
         } else {
             finishInitialPresentation()
