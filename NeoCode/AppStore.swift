@@ -4256,8 +4256,15 @@ final class AppStore {
         }
     }
 
+    private var pendingUIRevisionTask: Task<Void, Never>?
+
     private func bumpSessionUIRevision() {
-        sessionUIRevision &+= 1
+        pendingUIRevisionTask?.cancel()
+        pendingUIRevisionTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(0))
+            guard !Task.isCancelled else { return }
+            sessionUIRevision &+= 1
+        }
     }
 
     private func queueDispatchSessionID(for event: OpenCodeEvent) -> String? {
