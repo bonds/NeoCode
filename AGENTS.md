@@ -11,7 +11,7 @@
 - Xcode project: `NeoCode.xcodeproj`
 - Main scheme: `NeoCode`
 - Targets: `NeoCode`, `NeoCodeTests`, `NeoCodeUITests`
-- Command runner: `just`
+- Build directory: `DerivedData/` (project-local, gitignored). No need to use `/tmp` for builds — Xcode SCM no longer interferes.
 - Release docs: `BUILD.md`, `RELEASING.md`, `TRANSLATIONS.md`
 - Repo-local AI rule files checked: no `.cursor/rules/`, no `.cursorrules`, no `.github/copilot-instructions.md`
 
@@ -31,12 +31,12 @@
 
 ## Build, Test, And Release
 
+- Build directory is at `DerivedData/` (relative to project root) and is already gitignored.
 - List schemes: `xcodebuild -list -project "NeoCode.xcodeproj"`
-- Debug build: `just build` or `xcodebuild build -project "NeoCode.xcodeproj" -scheme "NeoCode" -configuration Debug -derivedDataPath DerivedData`
-- Release build: `just build-release`
+- Debug build: `xcodebuild build -project "NeoCode.xcodeproj" -scheme "NeoCode" -configuration Debug -derivedDataPath DerivedData`
+- Release build: `xcodebuild build -project "NeoCode.xcodeproj" -scheme "NeoCode" -configuration Release -derivedDataPath DerivedData`
 - Run all tests: `just test` or `xcodebuild test -project "NeoCode.xcodeproj" -scheme "NeoCode" -destination 'platform=macOS'`
 - Run unit tests only: `xcodebuild test -project "NeoCode.xcodeproj" -scheme "NeoCode" -destination 'platform=macOS' -only-testing:NeoCodeTests`
-- Run UI tests only: `xcodebuild test -project "NeoCode.xcodeproj" -scheme "NeoCode" -destination 'platform=macOS' -only-testing:NeoCodeUITests`
 - Run one Swift Testing suite or case: `xcodebuild test -project "NeoCode.xcodeproj" -scheme "NeoCode" -destination 'platform=macOS' -only-testing:NeoCodeTests/<SuiteName>` or `-only-testing:NeoCodeTests/<SuiteName>/<test-name>`
 - Run one UI test: `xcodebuild test -project "NeoCode.xcodeproj" -scheme "NeoCode" -destination 'platform=macOS' -only-testing:NeoCodeUITests/NeoCodeUITests/<test-name>`
 - Release helpers live in `justfile`; common commands include `just archive`, `just export-app`, `just dmg`, `just notarize dist/NeoCode.dmg`, `just staple dist/NeoCode.dmg`, and `just release X.Y.Z`
