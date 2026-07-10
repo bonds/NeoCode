@@ -23,6 +23,10 @@ extension FocusedValues {
 struct NeoCodeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
+    init() {
+        _ = FrameTimingTracker.shared
+    }
+
     var body: some Scene {
         WindowGroup {
             if AppTestMode.isUnitTestHost {
