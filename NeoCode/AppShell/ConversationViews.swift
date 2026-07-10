@@ -855,6 +855,7 @@ struct ConversationView: View {
     private func schedulePinnedStateUpdate(_ nextPinnedState: Bool) {
         guard nextPinnedState != isPinnedToBottom else { return }
         isPinnedToBottom = nextPinnedState
+        store.isScrollingTranscript = !nextPinnedState
     }
 
     private func updateTranscriptScrollMetrics(_ metrics: TranscriptScrollMetrics, using proxy: ScrollViewProxy) {

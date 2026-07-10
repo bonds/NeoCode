@@ -152,6 +152,7 @@ final class AppStore {
     var isLoadingSessions: Bool {
         loadingSessionCountsByProjectID.values.contains { $0 > 0 }
     }
+    var isScrollingTranscript = false
     var loadingTranscriptSessionID: String?
     private(set) var lifecycleRefreshToken = 0
     private(set) var sessionUIRevision = 0
@@ -5718,6 +5719,7 @@ final class AppStore {
 
     private func scheduleBufferedDeltaFlush() {
         bufferedDeltaFlushTask?.cancel()
+        guard !isScrollingTranscript else { return }
         let delay = performanceOptions.deltaFlushDebounce
         bufferedDeltaFlushTask = Task { [weak self] in
             guard let self else { return }
