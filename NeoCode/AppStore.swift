@@ -497,7 +497,7 @@ final class AppStore {
         // 10-second cooldown: show as busy if we were busy recently
         if case .idle = activity,
            let lastBusy = lastBusyAt[sessionID],
-           Date().timeIntervalSince(lastBusy) < 10 {
+           Date().timeIntervalSince(lastBusy) < 3 {
             return .busy
         }
         return activity
@@ -3947,24 +3947,7 @@ final class AppStore {
         if let messageIndex = transcript.firstIndex(where: { $0.id == message.id }) {
             transcript[messageIndex] = message
         } else {
-            if message.emphasis != .strong,
-               let lastMessage = transcript.last,
-               lastMessage.messageID == message.messageID,
-               lastMessage.emphasis == .strong,
-               lastMessage.isInProgress
-            {
-                // Response arrived while thinking is still in progress — insert right after thinking
-                transcript.insert(message, at: transcript.endIndex)
-            } else if message.emphasis == .strong,
-                      let lastMessage = transcript.last,
-                      lastMessage.messageID == message.messageID,
-                      lastMessage.emphasis != .strong
-            {
-                // Thinking arrived after its response — insert right before the response
-                transcript.insert(message, at: transcript.count - 1)
-            } else {
-                transcript.append(message)
-            }
+            transcript.append(message)
         }
         setTranscript(transcript, for: sessionID)
         projects[indices.project].sessions[indices.session].lastUpdatedAt = message.timestamp
@@ -5768,23 +5751,7 @@ final class AppStore {
                     kind: .plain,
                     isInProgress: true
                 )
-                // Insert after same-messageID thinking block, or before same-messageID response
-                if placeholder.emphasis != .strong,
-                   let lastMsg = transcript.last,
-                   lastMsg.messageID == placeholder.messageID,
-                   lastMsg.emphasis == .strong,
-                   lastMsg.isInProgress
-                {
-                    transcript.insert(placeholder, at: transcript.endIndex)
-                } else if placeholder.emphasis == .strong,
-                          let lastMsg = transcript.last,
-                          lastMsg.messageID == placeholder.messageID,
-                          lastMsg.emphasis != .strong
-                {
-                    transcript.insert(placeholder, at: transcript.count - 1)
-                } else {
-                    transcript.append(placeholder)
-                }
+                transcript.append(placeholder)
                 messageIndex = transcript.firstIndex(where: { $0.id == key.partID })
                     ?? (transcript.endIndex - 1)
             }

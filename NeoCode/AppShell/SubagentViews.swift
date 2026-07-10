@@ -28,13 +28,6 @@ struct SubagentTaskCardView: View {
                 }
             }
         }
-        .task {
-            guard let sessionID else { return }
-            await store.syncChildSessions(for: sessionID, using: runtime)
-            if let id = subagentSessionID, fetchedSubagentID == nil {
-                fetchedSubagentID = id
-            }
-        }
     }
 
     @ViewBuilder
