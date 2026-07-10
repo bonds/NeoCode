@@ -4,29 +4,23 @@ struct SubagentTaskCardView: View {
     @Environment(AppStore.self) private var store
     @Environment(OpenCodeRuntime.self) private var runtime
     @Environment(\.locale) private var locale
-    @State private var fetchedSubagentID: String?
 
     let toolCall: ChatMessage.ToolCall
 
     private var sessionID: String? { store.selectedSessionID }
 
-    private var subagentSessions: [SessionSummary] {
-        guard let sessionID, let project = store.projects.first(where: { $0.sessions.contains(where: { $0.id == sessionID }) })
-        else { return [] }
-        return project.childSessions(for: sessionID)
+    private var subagentSession: SessionSummary? {
+        guard let sessionID, let id = subagentSessionID,
+              let project = store.projects.first(where: { $0.sessions.contains(where: { $0.id == sessionID }) })
+        else { return nil }
+        return project.childSessions(for: sessionID).first(where: { $0.id == id })
     }
 
     var body: some View {
-        let subagents = subagentSessions
-
-        VStack(alignment: .leading, spacing: 12) {
-            if subagents.isEmpty {
-                taskToolCard
-            } else {
-                ForEach(subagents) { subagent in
-                    subagentCard(subagent)
-                }
-            }
+        if let subagent = subagentSession {
+            subagentCard(subagent)
+        } else {
+            taskToolCard
         }
     }
 
@@ -198,9 +192,6 @@ struct SubagentTaskCardView: View {
     }
 
     private var subagentSessionID: String? {
-        // Return fetched ID first (from runtime sync)
-        if let fetched = fetchedSubagentID { return fetched }
-
         // First try: parse from output (available when task completes)
         if let raw = toolCall.output?.displayString {
             let pattern = /<task id="(ses_[a-zA-Z0-9]+)"/
