@@ -3288,7 +3288,22 @@ final class AppStore {
             for message in messages {
                 messageRoles[message.info.id] = message.info.chatRole
             }
-            replaceTranscript(in: sessionID, projectID: projectID, with: transcript)
+
+            // When loading older messages, only prepend new ones if existing messages are unchanged
+            if !existingTranscript.isEmpty,
+               transcript.count > existingTranscript.count,
+               transcript.suffix(existingTranscript.count).elementsEqual(existingTranscript, by: { $0.id == $1.id })
+            {
+                // Existing messages unchanged — just prepend the new older ones
+                let newCount = transcript.count - existingTranscript.count
+                let newMessages = Array(transcript.prefix(newCount))
+                var state = transcriptStateBySessionID[sessionID] ?? SessionTranscriptState()
+                state.messages = newMessages + existingTranscript
+                state.revision &+= 1
+                transcriptStateBySessionID[sessionID] = state
+            } else {
+                replaceTranscript(in: sessionID, projectID: projectID, with: transcript)
+            }
             replaceActiveTodos(in: sessionID, with: SessionTodoParser.latestSnapshot(from: messages))
             refreshSessionStats(sessionID: sessionID, projectID: projectID)
             refreshSessionStatus(sessionID: sessionID, projectID: projectID)
