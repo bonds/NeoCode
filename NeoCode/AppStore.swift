@@ -4256,15 +4256,13 @@ final class AppStore {
         }
     }
 
-    private var pendingUIRevisionTask: Task<Void, Never>?
+    private var lastUIRevisionTime: Date = .distantPast
 
     private func bumpSessionUIRevision() {
-        pendingUIRevisionTask?.cancel()
-        pendingUIRevisionTask = Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(16))
-            guard !Task.isCancelled else { return }
-            sessionUIRevision &+= 1
-        }
+        let now = Date()
+        guard now.timeIntervalSince(lastUIRevisionTime) >= 0.016 else { return }
+        lastUIRevisionTime = now
+        sessionUIRevision &+= 1
     }
 
     private func queueDispatchSessionID(for event: OpenCodeEvent) -> String? {
