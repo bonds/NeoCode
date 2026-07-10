@@ -37,13 +37,13 @@ final class FrameTimingTracker {
                 if delta > dropThreshold {
                     dropCount += 1
                     if delta > 0.02, dropCount % 10 == 1 {
-                        logger.warning("Frame drop #\(dropCount): \(String(format: "%.1f", delta * 1000))ms")
+                        logger.warning("Frame drop #\(dropCount, privacy: .public): \(String(format: "%.1f", delta * 1000), privacy: .public)ms")
                     }
                 }
                 frameCount += 1
                 if frameCount >= 600 {
                     let pct = Double(dropCount) / Double(max(totalFrames, 1)) * 100
-                    logger.notice("Frames: \(totalFrames) Drops: \(dropCount) (\(String(format: "%.1f", pct))%) Max: \(String(format: "%.1f", maxFrameDuration * 1000))ms")
+                    logger.notice("Frames: \(totalFrames, privacy: .public) Drops: \(dropCount, privacy: .public) Max: \(String(format: "%.1f", maxFrameDuration * 1000), privacy: .public)ms")
                     frameCount = 0
                 }
             }
