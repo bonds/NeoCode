@@ -5,7 +5,7 @@ import OSLog
 nonisolated struct AppStorePerformanceOptions: Sendable {
     var projectPersistenceDebounce: Duration = .milliseconds(250)
     var streamingPersistenceDebounce: Duration = .seconds(2)
-    var deltaFlushDebounce: Duration = .milliseconds(50)
+    var deltaFlushDebounce: Duration = .milliseconds(80)
 }
 
 struct AppTerminationWarningContext: Equatable {
