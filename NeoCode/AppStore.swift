@@ -3348,6 +3348,7 @@ final class AppStore {
                         "Opening live event stream attempt=\(reconnectAttempt + 1, privacy: .public) project=\(projectID.uuidString, privacy: .public)"
                     )
                     let stream = try streamService.eventStream()
+                    var streamEventCount = 0
                     for try await event in stream {
                         if Task.isCancelled || !self.hasActiveSubscription(projectID: projectID, connectionIdentifier: connectionIdentifier, token: subscriptionToken) {
                             return
@@ -3402,6 +3403,12 @@ final class AppStore {
                             break
                         }
                         self.reevaluateRuntimeRetention(using: runtime)
+
+                        // Yield every 5 events to allow input processing during bursts
+                        streamEventCount += 1
+                        if streamEventCount % 5 == 0 {
+                            try? await Task.sleep(for: .milliseconds(0))
+                        }
                     }
 
                     if Task.isCancelled || !self.hasActiveSubscription(projectID: projectID, connectionIdentifier: connectionIdentifier, token: subscriptionToken) {
