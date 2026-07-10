@@ -56,7 +56,7 @@ private struct ThreadsSidebarView: View {
                     if store.projects.isEmpty {
                         EmptyProjectsSidebarView(onAddProject: { isPickingProject = true })
                     } else {
-                        LazyVStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: 4) {
                             ForEach(store.projects) { project in
                                 ProjectTreeNode(
                                     project: project,
@@ -265,7 +265,7 @@ struct ProjectTreeNode: View {
             .onHover { isHovering = $0 }
 
             if !store.isProjectCollapsed(project.id) {
-                LazyVStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 2) {
                     if shouldShowSessionSyncIndicator {
                         ProjectSessionSyncRow()
                     }
