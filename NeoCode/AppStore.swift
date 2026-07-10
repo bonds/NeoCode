@@ -5,7 +5,7 @@ import OSLog
 nonisolated struct AppStorePerformanceOptions: Sendable {
     var projectPersistenceDebounce: Duration = .milliseconds(250)
     var streamingPersistenceDebounce: Duration = .seconds(2)
-    var deltaFlushDebounce: Duration = .milliseconds(33)
+    var deltaFlushDebounce: Duration = .milliseconds(50)
 }
 
 struct AppTerminationWarningContext: Equatable {
@@ -5789,7 +5789,12 @@ final class AppStore {
 
             transcript[messageIndex].text += buffered.text
             transcript[messageIndex].timestamp = buffered.updatedAt
-            setTranscript(transcript, for: key.sessionID)
+            // Directly replace just the modified message to avoid SwiftUI diffing the entire transcript
+            if var state = transcriptStateBySessionID[key.sessionID] {
+                state.messages = transcript
+                state.revision &+= 1
+                transcriptStateBySessionID[key.sessionID] = state
+            }
             changedSessions.insert("\(key.projectID.uuidString)|\(key.sessionID)")
         }
 
