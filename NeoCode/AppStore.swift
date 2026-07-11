@@ -46,12 +46,6 @@ final class AppStore {
         case streaming
     }
 
-    private struct BufferedTextDeltaKey: Hashable {
-        let projectID: ProjectSummary.ID
-        let sessionID: String
-        let partID: String
-    }
-
     private struct BufferedTextDelta {
         let messageID: String
         var text: String
@@ -232,6 +226,7 @@ final class AppStore {
     private var inputHistoryBySession: [String: [String]] = [:]
     private var inputHistoryIndexBySession: [String: Int] = [:]
     private var savedDraftBySession: [String: String] = [:]
+    private var eventWorker = EventWorker()
     private var favoriteModelIDs: Set<String> = []
     private var isApplyingSessionComposerState = false
     private var autoRespondedPermissionIDs: [String: Date] = [:]
@@ -2266,6 +2261,75 @@ final class AppStore {
         apply(event: event, projectID: projectID)
     }
 
+    private func applyMutations(_ mutations: [StateMutation]) {
+        for mutation in mutations {
+            switch mutation {
+            case .setLiveStatus(let sessionID, let status, let isBusy):
+                liveSessionStatuses[sessionID] = status
+                if isBusy { lastBusyAt[sessionID] = .now }
+            case .setResolvedStatus(let sessionID, let projectID, let status):
+                guard let indices = indices(for: sessionID, projectID: projectID) else { continue }
+                let prev = projects[indices.project].sessions[indices.session].status
+                projects[indices.project].sessions[indices.session].status = status
+                updateFinishedIndicator(sessionID: sessionID, previousStatus: prev, newStatus: status)
+            case .bufferDelta(let key, let delta, let messageID):
+                if var buffered = bufferedTextDeltas[key] {
+                    buffered.text += delta
+                    buffered.updatedAt = .now
+                    bufferedTextDeltas[key] = buffered
+                } else {
+                    bufferedTextDeltas[key] = BufferedTextDelta(messageID: messageID, text: delta, updatedAt: .now)
+                }
+                bufferedTextDeltaOrder.append(key)
+                scheduleBufferedDeltaFlush()
+            case .updateTranscript(let sessionID, let messages):
+                for message in messages {
+                    upsertMessage(message, in: sessionID, projectID: projectID(for: sessionID) ?? ProjectSummary.ID())
+                }
+            case .insertChildSession(let projectID, let session):
+                if let idx = projects.firstIndex(where: { $0.id == projectID }),
+                   !projects[idx].sessions.contains(where: { $0.id == session.id }) {
+                    projects[idx].sessions.insert(session, at: 0)
+                }
+            case .upsertRootSession(let projectID, let session, let isCreated):
+                upsert(session: session, in: projectID, preferTopInsertion: isCreated)
+            case .removeSession(let sessionID, let projectID):
+                removeSession(sessionID, in: projectID)
+            case .markLocallyDeleted(let sessionID, let projectID):
+                markSessionDeletedLocally(sessionID, in: projectID)
+                removeResolvedSessionCluster(sessionID, in: projectID)
+            case .compactSession(let sessionID, let projectID):
+                if let service = liveServices[projectID] {
+                    Task { [weak self] in
+                        await self?.loadMessages(for: sessionID, using: service, projectID: projectID, allowCachedFallback: true)
+                    }
+                }
+            case .updateMessageInfo(let sessionID, let info):
+                var infos = messageInfosBySessionID[sessionID] ?? [:]
+                infos[info.id] = info
+                messageInfosBySessionID[sessionID] = infos
+                reconcileCompletedMessageIfNeeded(info, sessionID: sessionID, projectID: projectID(for: sessionID) ?? ProjectSummary.ID())
+                refreshSessionStats(sessionID: sessionID, projectID: projectID(for: sessionID) ?? ProjectSummary.ID())
+                touchSession(sessionID: sessionID, projectID: projectID(for: sessionID) ?? ProjectSummary.ID(), updatedAt: info.updatedAt ?? info.createdAt ?? Date())
+            case .updateMessageRoles(let roles):
+                for (id, role) in roles {
+                    messageRoles[id] = role
+                }
+            }
+        }
+    }
+
+    /// Extract a session ID from an event for transcript copying purposes.
+    private func eventSessionID(for event: OpenCodeEvent) -> String? {
+        switch event {
+        case .sessionStatusChanged(let sessionID, _): return sessionID
+        case .messageUpdated(let info): return info.sessionID
+        case .messagePartUpdated(let part): return part.sessionID
+        case .messagePartDelta(let delta): return delta.sessionID
+        default: return nil
+        }
+    }
+
     private func apply(event: OpenCodeEvent, projectID: ProjectSummary.ID) {
         switch event {
         case .sessionCreated(let session), .sessionUpdated(let session):
@@ -3370,7 +3434,20 @@ final class AppStore {
                             logger.debug("Received live event: \(event.debugName, privacy: .public)")
                         }
 
-                        self.apply(event: event, projectID: projectID)
+                        // Route processing to background actor for expensive work
+                        let sessionID = self.eventSessionID(for: event)
+                        let transcript = sessionID.map { self.transcript(for: $0) } ?? []
+                        let sessionIDs = Set(self.projects.flatMap(\.sessions).map(\.id))
+                        let hasDeltas = sessionID.map { self.hasBufferedTextDeltas(for: $0) } ?? false
+                        Task {
+                            let mutations = await self.eventWorker.process(
+                                event, projectID: projectID,
+                                transcript: transcript,
+                                sessionIDs: sessionIDs,
+                                hasBufferedDeltas: hasDeltas
+                            )
+                            await self.applyMutations(mutations)
+                        }
                         if let queueSessionID = self.queueDispatchSessionID(for: event) {
                             await self.sendQueuedMessagesIfPossible(
                                 for: queueSessionID,
